@@ -1,0 +1,7 @@
+fpga/output_files
+fpga/db
+fpga/incremental_db
+fpga/simulation
+fpga/fpga.qws
+app/app.pro.user
+build-app*
