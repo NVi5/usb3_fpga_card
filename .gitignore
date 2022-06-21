@@ -4,5 +4,8 @@ fpga/incremental_db
 fpga/simulation
 fpga/greybox_tmp
 fpga/fpga.qws
+fx3/Debug
+fx3/.settings
 app/app.pro.user
 build-app*
+.metadata
