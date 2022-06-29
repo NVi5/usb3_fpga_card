@@ -168,6 +168,8 @@ set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SLRD
 set_instance_assignment -name IO_STANDARD "3.3-V LVTTL" -to SLWR
 
 
+
+set_global_assignment -name QIP_FILE ip/nios/synthesis/nios.qip
 set_global_assignment -name VERILOG_FILE src/fifo.v
 set_global_assignment -name VERILOG_FILE src/main.v
 set_global_assignment -name SDC_FILE src/main.sdc

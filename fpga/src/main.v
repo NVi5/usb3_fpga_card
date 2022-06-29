@@ -69,12 +69,13 @@ module main (
     assign PKEND = 1'b1;
 
     // assign clk_100 = clk;        //for TB
+    assign reset_ = lock;
 
     // clock generation(pll instantiation)
     pll inst_clk_pll (
-        .areset(  /*reset2pll*/ 1'b0),
+        .areset(1'b0),
         .inclk0(CLK50),
-        .c0(clk_100),
+        .c0    (clk_100),
         .locked(lock)
     );
 
@@ -87,7 +88,11 @@ module main (
         .dataout (CLK_OUT)
     );
 
-    assign reset_ = lock;
+    nios inst_nios (
+        .clk_clk       (clk_100),
+        .reset_reset_n (reset_),
+        .data_in_export(data_out_loopback)
+    );
 
     // flopping the INPUTs flags
     always @(posedge clk_100, negedge reset_) begin

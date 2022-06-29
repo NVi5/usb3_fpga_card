@@ -4,8 +4,16 @@ fpga/incremental_db
 fpga/simulation
 fpga/greybox_tmp
 fpga/fpga.qws
+fpga/software/nios_app/obj
+fpga/software/nios_app_bsp/obj
+fpga/software/nios_app_bsp/libhal_bsp.a
 fx3/Debug
 fx3/.settings
 app/app.pro.user
 build-app*
 .metadata
+.qsys_edit
+*.bak
+*.elf
+*.objdump
+*.map
