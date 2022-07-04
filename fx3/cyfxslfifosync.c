@@ -36,7 +36,7 @@
    and one for U to P data transfer.
 
    The U to P DMA channel connects the USB producer (OUT) endpoint to the consumer p-port
-   socket. And the P to U DMA channel connects the producer p-port socket to the USB 
+   socket. And the P to U DMA channel connects the producer p-port socket to the USB
    consumer (IN) endpoint.
 
    Upon every reception of data in the DMA buffer from the host or from the p-port, the
@@ -153,10 +153,11 @@ CyFxSlFifoUtoPDmaCallback (
         )
 {
     CyU3PReturnStatus_t status = CY_U3P_SUCCESS;
+    uint8_t *ptr;
 
     if (type == CY_U3P_DMA_CB_PROD_EVENT)
     {
-        /* This is a produce event notification to the CPU. This notification is 
+        /* This is a produce event notification to the CPU. This notification is
          * received upon reception of every buffer. The buffer will not be sent
          * out unless it is explicitly committed. The call shall fail if there
          * is a bus reset / usb disconnect or if there is any application error. */
@@ -165,6 +166,9 @@ CyFxSlFifoUtoPDmaCallback (
         {
             CyU3PDebugPrint (4, "CyU3PDmaChannelCommitBuffer failed, Error code = %d\n", status);
         }
+
+        ptr = input->buffer_p.buffer;
+        CyU3PDebugPrint (2, "CyU3PDmaChannelCommitBuffer, Memory address = %d\n", ptr);
 
         /* Increment the counter. */
         glDMARxCount++;
@@ -180,18 +184,22 @@ CyFxSlFifoPtoUDmaCallback (
         )
 {
     CyU3PReturnStatus_t status = CY_U3P_SUCCESS;
+    uint8_t *ptr;
 
     if (type == CY_U3P_DMA_CB_PROD_EVENT)
     {
-        /* This is a produce event notification to the CPU. This notification is 
+        /* This is a produce event notification to the CPU. This notification is
          * received upon reception of every buffer. The buffer will not be sent
          * out unless it is explicitly committed. The call shall fail if there
          * is a bus reset / usb disconnect or if there is any application error. */
         status = CyU3PDmaChannelCommitBuffer (chHandle, input->buffer_p.count, 0);
         if (status != CY_U3P_SUCCESS)
         {
-            CyU3PDebugPrint (4, "CyU3PDmaChannelCommitBuffer failed, Error code = %d\n", status);
+            CyU3PDebugPrint (4, "CyFxSlFifoPtoUDmaCallback failed, Error code = %d\n", status);
         }
+
+        ptr = input->buffer_p.buffer;
+        CyU3PDebugPrint (2, "CyFxSlFifoPtoUDmaCallback, Memory address = %d\n", ptr);
 
         /* Increment the counter. */
         glDMATxCount++;
@@ -532,14 +540,14 @@ CyFxSlFifoApplnInit (void)
         CyFxAppErrorHandler(apiRetStatus);
     }
 
-#if (CY_FX_SLFIFO_GPIF_16_32BIT_CONF_SELECT == 1)	
+#if (CY_FX_SLFIFO_GPIF_16_32BIT_CONF_SELECT == 1)
     CyU3PGpifSocketConfigure (0,CY_U3P_PIB_SOCKET_0,6,CyFalse,1);
     CyU3PGpifSocketConfigure (3,CY_U3P_PIB_SOCKET_3,6,CyFalse,1);
 #else
 	CyU3PGpifSocketConfigure (0,CY_U3P_PIB_SOCKET_0,3,CyFalse,1);
     CyU3PGpifSocketConfigure (3,CY_U3P_PIB_SOCKET_3,3,CyFalse,1);
 #endif
-	
+
     /* Start the state machine. */
     apiRetStatus = CyU3PGpifSMStart (RESET, ALPHA_RESET);
     if (apiRetStatus != CY_U3P_SUCCESS)
@@ -547,7 +555,7 @@ CyFxSlFifoApplnInit (void)
         CyU3PDebugPrint (4, "CyU3PGpifSMStart failed, Error Code = %d\n",apiRetStatus);
         CyFxAppErrorHandler(apiRetStatus);
     }
-	
+
 	/* Init the GPIO module */
 	gpioClock.fastClkDiv = 2;
 	gpioClock.slowClkDiv = 0;
@@ -594,7 +602,7 @@ CyFxSlFifoApplnInit (void)
     CyU3PUsbRegisterEventCallback(CyFxSlFifoApplnUSBEventCB);
 
     /* Register a callback to handle LPM requests from the USB 3.0 host. */
-    CyU3PUsbRegisterLPMRequestCallback(CyFxApplnLPMRqtCB);    
+    CyU3PUsbRegisterLPMRequestCallback(CyFxApplnLPMRqtCB);
 
     /* Set the USB Enumeration descriptors */
 
@@ -782,7 +790,7 @@ main (void)
         goto handle_fatal_error;
     }
 
-    /* Configure the IO matrix for the device. On the FX3 DVK board, the COM port 
+    /* Configure the IO matrix for the device. On the FX3 DVK board, the COM port
      * is connected to the IO(53:56). This means that either DQ32 mode should be
      * selected or lppMode should be set to UART_ONLY. Here we are choosing
      * UART_ONLY configuration for 16 bit slave FIFO configuration and setting
@@ -824,4 +832,3 @@ handle_fatal_error:
 }
 
 /* [ ] */
-
