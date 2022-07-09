@@ -161,14 +161,15 @@ CyFxSlFifoUtoPDmaCallback (
          * received upon reception of every buffer. The buffer will not be sent
          * out unless it is explicitly committed. The call shall fail if there
          * is a bus reset / usb disconnect or if there is any application error. */
+        CyU3PDebugPrint (2, "CyFxSlFifoUtoPDmaCallback, Buffer count = %d\n", input->buffer_p.count);
         status = CyU3PDmaChannelCommitBuffer (chHandle, input->buffer_p.count, 0);
         if (status != CY_U3P_SUCCESS)
         {
-            CyU3PDebugPrint (4, "CyU3PDmaChannelCommitBuffer failed, Error code = %d\n", status);
+            CyU3PDebugPrint (4, "CyFxSlFifoUtoPDmaCallback failed, Error code = %d\n", status);
         }
 
         ptr = input->buffer_p.buffer;
-        CyU3PDebugPrint (2, "CyU3PDmaChannelCommitBuffer, Memory address = %d\n", ptr);
+        CyU3PDebugPrint (2, "CyFxSlFifoUtoPDmaCallback, Memory address = %d\n", ptr);
 
         /* Increment the counter. */
         glDMARxCount++;
@@ -192,6 +193,7 @@ CyFxSlFifoPtoUDmaCallback (
          * received upon reception of every buffer. The buffer will not be sent
          * out unless it is explicitly committed. The call shall fail if there
          * is a bus reset / usb disconnect or if there is any application error. */
+        CyU3PDebugPrint (2, "CyFxSlFifoPtoUDmaCallback, Buffer count = %d\n", input->buffer_p.count);
         status = CyU3PDmaChannelCommitBuffer (chHandle, input->buffer_p.count, 0);
         if (status != CY_U3P_SUCCESS)
         {
@@ -270,17 +272,17 @@ CyFxSlFifoApplnStart (
      * DMA size is set based on the USB speed. */
     dmaCfg.size  = size;
     dmaCfg.count = CY_FX_SLFIFO_DMA_BUF_COUNT;
-    dmaCfg.prodSckId = CY_FX_PRODUCER_USB_SOCKET;
-    dmaCfg.consSckId = CY_FX_CONSUMER_PPORT_SOCKET;
     dmaCfg.dmaMode = CY_U3P_DMA_MODE_BYTE;
     /* Enabling the callback for produce event. */
     dmaCfg.notification = CY_U3P_DMA_CB_PROD_EVENT;
-    dmaCfg.cb = CyFxSlFifoUtoPDmaCallback;
     dmaCfg.prodHeader = 0;
     dmaCfg.prodFooter = 0;
     dmaCfg.consHeader = 0;
     dmaCfg.prodAvailCount = 0;
 
+    dmaCfg.prodSckId = CY_FX_PRODUCER_USB_SOCKET;
+    dmaCfg.consSckId = CY_FX_CONSUMER_PPORT_SOCKET;
+    dmaCfg.cb = CyFxSlFifoUtoPDmaCallback;
     apiRetStatus = CyU3PDmaChannelCreate (&glChHandleSlFifoUtoP,
             CY_U3P_DMA_TYPE_MANUAL, &dmaCfg);
     if (apiRetStatus != CY_U3P_SUCCESS)
