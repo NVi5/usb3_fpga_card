@@ -88,12 +88,6 @@ module main (
         .dataout (CLK_OUT)
     );
 
-    nios inst_nios (
-        .clk_clk       (clk_100),
-        .reset_reset_n (reset_),
-        .data_in_export(data_out_loopback)
-    );
-
     // flopping the INPUTs flags
     always @(posedge clk_100, negedge reset_) begin
         if (!reset_) begin
