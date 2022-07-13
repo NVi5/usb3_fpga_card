@@ -4,8 +4,8 @@ module main (
     input RESET_N,
 
     // LED and Push Button
-    output [3:0] USER_LED,
-    input  [3:0] PB,
+    output reg [3:0] USER_LED,
+    input  wire [3:0] PB,
 
     // FX3
     inout  [31:0] DQ,      // data bus
@@ -21,8 +21,6 @@ module main (
     output        PKEND,   // output pkt end
     output        CLK_OUT  // output clk 100 Mhz and 180 phase shift
 );
-
-    assign USER_LED[1:0] = PB[1:0];
 
     reg [1:0] oe_delay_cnt;
     reg rd_oe_delay_cnt;
@@ -160,6 +158,16 @@ module main (
             fifo_address_d <= 2'd0;
         end else begin
             fifo_address_d <= fifo_address;
+        end
+    end
+
+    always @(posedge clk_100, negedge reset_) begin
+        if (!reset_) begin
+            USER_LED[3:0] <= 4'b1111;
+        end else begin
+            if ((SLRD_loopback_d3_ == 1'b0) && (SLRD_loopback_d4_ == 1'b1)) begin
+                USER_LED[3:0] <= ~DQ_d[3:0];
+            end
         end
     end
 

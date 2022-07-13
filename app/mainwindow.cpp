@@ -32,39 +32,47 @@ MainWindow::~MainWindow()
 void MainWindow::find_transport(void)
 {
     int eptCount = this->USBDevice->EndPointCount();
-    for (int i=1; i<eptCount; i++) {
+    this->BulkOutEpt = nullptr;
+    this->BulkOutEpt = nullptr;
+    qDebug() << "Endpoints count: " << eptCount;
+    for (int i=0; i<eptCount; i++) {
+        qDebug("Found Endpoint: 0x%02X", this->USBDevice->EndPoints[i]->Address);
         bool bIn = ((this->USBDevice->EndPoints[i]->Address & 0x80) == 0x80);
+        bool bSel = ((this->USBDevice->EndPoints[i]->Address & 0x0F) == 0x01);
         bool bBulk = (this->USBDevice->EndPoints[i]->Attributes == 2);
-        if (bBulk && bIn) {
+        if (bBulk && bIn && bSel) {
             this->BulkInEpt = (CCyBulkEndPoint *) this->USBDevice->EndPoints[i];
             qDebug("BulkInEpt EpAddr - 0x%02X", this->BulkInEpt->Address);
         }
-        if (bBulk && !bIn) {
+        if (bBulk && !bIn && bSel) {
             this->BulkOutEpt = (CCyBulkEndPoint *) this->USBDevice->EndPoints[i];
             qDebug("BulkOutEpt EpAddr - 0x%02X", this->BulkOutEpt->Address);
         }
     }
+
+    Q_ASSERT(this->BulkOutEpt && this->BulkInEpt);
 }
 
 void MainWindow::send_bulk(unsigned char state)
 {
-    LONG packet_length = 1;
-    this->BulkOutEpt->XferData(&state, packet_length);
+    LONG packet_length = 1024;
+    UCHAR xd[1024] = {state, 0xFF, 0};
+    BOOL status = this->BulkOutEpt->XferData(xd, packet_length);
 
-    qDebug("Sent - %d", state);
+    qDebug() << "Sent: " << state << "Result: " << status;
 }
 
 bool MainWindow::read_bulk(unsigned char *state)
 {
     bool status = true;
-    unsigned char inBuf = 0;
-    LONG packet_length = 1;
+    UCHAR inBuf[1024];
+    LONG packet_length = 1024;
 
     OVERLAPPED inOvLap;
     inOvLap.hEvent = CreateEvent(NULL, false, false, L"CYUSB_IN");
 
-    UCHAR *inContext = this->BulkInEpt->BeginDataXfer(&inBuf, packet_length, &inOvLap);
-    if(!this->BulkInEpt->WaitForXfer(&inOvLap, 200))
+    UCHAR *inContext = this->BulkInEpt->BeginDataXfer(inBuf, packet_length, &inOvLap);
+    if(!this->BulkInEpt->WaitForXfer(&inOvLap, 1500))
     {
         status = false;
 
@@ -72,25 +80,25 @@ bool MainWindow::read_bulk(unsigned char *state)
         if (this->BulkInEpt->LastError == ERROR_IO_PENDING)
         {
             qDebug() << "BulkInEpt ERROR_IO_PENDING";
-            WaitForSingleObject(inOvLap.hEvent, 200);
+            WaitForSingleObject(inOvLap.hEvent, 1500);
         }
         else
         {
             qDebug() << "BulkInEpt unknown error - " << this->BulkInEpt->LastError;
         }
     }
-    this->BulkInEpt->FinishDataXfer(&inBuf, packet_length, &inOvLap, inContext);
+    this->BulkInEpt->FinishDataXfer(inBuf, packet_length, &inOvLap, inContext);
 
     CloseHandle(inOvLap.hEvent);
 
     if(status)
     {
-        qDebug("Received - %d", inBuf);
+        qDebug("Received - %d", inBuf[0]);
     }
 
     if (state)
     {
-        *state = inBuf;
+        *state = inBuf[0];
     }
 
     return status;
