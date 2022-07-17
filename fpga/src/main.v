@@ -66,14 +66,14 @@ module main (
     assign SLCS  = 1'b0;
     assign PKEND = 1'b1;
 
-    // assign clk_100 = clk;        //for TB
+    // assign clk_pll = clk;        //for TB
     assign reset_ = lock;
 
     // clock generation(pll instantiation)
     pll inst_clk_pll (
         .areset(1'b0),
         .inclk0(CLK50),
-        .c0    (clk_100),
+        .c0    (clk_pll),
         .locked(lock)
     );
 
@@ -82,12 +82,12 @@ module main (
     ddr inst_ddr_to_send_clk_to_fx3 (
         .datain_h(1'b0),
         .datain_l(1'b1),
-        .outclock(clk_100),
+        .outclock(clk_pll),
         .dataout (CLK_OUT)
     );
 
     // flopping the INPUTs flags
-    always @(posedge clk_100, negedge reset_) begin
+    always @(posedge clk_pll, negedge reset_) begin
         if (!reset_) begin
             FLAGA_d <= 1'd0;
             FLAGB_d <= 1'd0;
@@ -106,7 +106,7 @@ module main (
     assign SLOE_loopback_ = ((current_loop_back_state == loop_back_read) | (current_loop_back_state == loop_back_read_rd_and_oe_delay) | (current_loop_back_state == loop_back_read_oe_delay)) ? 1'b0 : 1'b1;
     assign SLWR_loopback_ = ((current_loop_back_state == loop_back_write)) ? 1'b0 : 1'b1;
 
-    always @(posedge clk_100, negedge reset_) begin
+    always @(posedge clk_pll, negedge reset_) begin
         if (!reset_) begin
             SLWR_loopback_1d_ <= 1'b1;
         end else begin
@@ -115,7 +115,7 @@ module main (
     end
 
     // delay for reading from slave fifo(data will be available after two clk cycle)
-    always @(posedge clk_100, negedge reset_) begin
+    always @(posedge clk_pll, negedge reset_) begin
         if (!reset_) begin
             SLRD_loopback_d1_ <= 1'b1;
             SLRD_loopback_d2_ <= 1'b1;
@@ -130,7 +130,7 @@ module main (
     end
 
     // flopping the input data
-    always @(posedge clk_100, negedge reset_) begin
+    always @(posedge clk_pll, negedge reset_) begin
         if (!reset_) begin
             DQ_d <= 32'd0;
         end else begin
@@ -153,7 +153,7 @@ module main (
     end
 
     // flopping the output fifo address
-    always @(posedge clk_100, negedge reset_) begin
+    always @(posedge clk_pll, negedge reset_) begin
         if (!reset_) begin
             fifo_address_d <= 2'd0;
         end else begin
@@ -161,7 +161,7 @@ module main (
         end
     end
 
-    always @(posedge clk_100, negedge reset_) begin
+    always @(posedge clk_pll, negedge reset_) begin
         if (!reset_) begin
             USER_LED[3:0] <= 4'b1111;
         end else begin
@@ -172,7 +172,7 @@ module main (
     end
 
     // counter to delay the read and output enable signal
-    always @(posedge clk_100, negedge reset_) begin
+    always @(posedge clk_pll, negedge reset_) begin
         if (!reset_) begin
             rd_oe_delay_cnt <= 1'b0;
         end else if (current_loop_back_state == loop_back_read) begin
@@ -185,7 +185,7 @@ module main (
     end
 
     // Counter to delay the OUTPUT Enable(oe) signal
-    always @(posedge clk_100, negedge reset_) begin
+    always @(posedge clk_pll, negedge reset_) begin
         if (!reset_) begin
             oe_delay_cnt <= 2'd0;
         end else if (current_loop_back_state == loop_back_read_rd_and_oe_delay) begin
@@ -198,7 +198,7 @@ module main (
     end
 
     // LoopBack state machine
-    always @(posedge clk_100, negedge reset_) begin
+    always @(posedge clk_pll, negedge reset_) begin
         if (!reset_) begin
             current_loop_back_state <= loop_back_idle;
         end else begin
@@ -286,13 +286,13 @@ module main (
         .dout(data_out_loopback),
         .read_busy(fifo_pop),
         .fifo_empty(),
-        .fifo_clk(clk_100),
+        .fifo_clk(clk_pll),
         .reset_(reset_),
         .fifo_flush(fifo_flush)
     );
 
     reg [31:0] data_out_loopback_d;
-    always @(posedge clk_100) begin
+    always @(posedge clk_pll) begin
         data_out_loopback_d <= data_out_loopback;
     end
 
