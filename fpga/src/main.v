@@ -22,6 +22,9 @@ module main (
     output        CLK_OUT  // output clk 100 Mhz and 180 phase shift
 );
 
+    reg [3:0] pb_old_state;
+    reg       led_update_flag;
+
     reg [1:0] oe_delay_cnt;
     reg rd_oe_delay_cnt;
     wire [31:0] fifo_data_in;
@@ -41,22 +44,22 @@ module main (
     reg FLAGD_d;
     wire [31:0] data_out_loopback;
 
-    reg [3:0] current_loop_back_state;
-    reg [3:0] next_loop_back_state;
+    reg [3:0] current_sm_state;
+    reg [3:0] next_sm_state;
     reg SLWR_loopback_1d_;
 
     // parameters for LoopBack mode state machine
-    parameter [3:0] loop_back_idle = 4'd0;
-    parameter [3:0] loop_back_FLAGC_rcvd = 4'd1;
-    parameter [3:0] loop_back_wait_FLAGD = 4'd2;
-    parameter [3:0] loop_back_read = 4'd3;
-    parameter [3:0] loop_back_read_rd_and_oe_delay = 4'd4;
-    parameter [3:0] loop_back_read_oe_delay = 4'd5;
-    parameter [3:0] loop_back_wait_FLAGA = 4'd6;
-    parameter [3:0] loop_back_wait_FLAGB = 4'd7;
-    parameter [3:0] loop_back_write = 4'd8;
-    parameter [3:0] loop_back_write_wr_delay = 4'd9;
-    parameter [3:0] loop_back_flush_fifo = 4'd10;
+    parameter [3:0] sm_idle = 4'd0;
+    parameter [3:0] sm_flagc_rcvd = 4'd1;
+    parameter [3:0] sm_wait_flagd = 4'd2;
+    parameter [3:0] sm_read = 4'd3;
+    parameter [3:0] sm_read_rd_and_oe_delay = 4'd4;
+    parameter [3:0] sm_read_oe_delay = 4'd5;
+    parameter [3:0] sm_wait_flaga = 4'd6;
+    parameter [3:0] sm_wait_flagb = 4'd7;
+    parameter [3:0] sm_write = 4'd8;
+    parameter [3:0] sm_write_wr_delay = 4'd9;
+    parameter [3:0] sm_flush_fifo = 4'd10;
 
     // output signal assignment
     assign SLRD  = SLRD_loopback_;
@@ -102,9 +105,9 @@ module main (
     end
 
     // output control signal generation
-    assign SLRD_loopback_ = ((current_loop_back_state == loop_back_read) | (current_loop_back_state == loop_back_read_rd_and_oe_delay)) ? 1'b0 : 1'b1;
-    assign SLOE_loopback_ = ((current_loop_back_state == loop_back_read) | (current_loop_back_state == loop_back_read_rd_and_oe_delay) | (current_loop_back_state == loop_back_read_oe_delay)) ? 1'b0 : 1'b1;
-    assign SLWR_loopback_ = ((current_loop_back_state == loop_back_write)) ? 1'b0 : 1'b1;
+    assign SLRD_loopback_ = ((current_sm_state == sm_read) | (current_sm_state == sm_read_rd_and_oe_delay)) ? 1'b0 : 1'b1;
+    assign SLOE_loopback_ = ((current_sm_state == sm_read) | (current_sm_state == sm_read_rd_and_oe_delay) | (current_sm_state == sm_read_oe_delay)) ? 1'b0 : 1'b1;
+    assign SLWR_loopback_ = ((current_sm_state == sm_write)) ? 1'b0 : 1'b1;
 
     always @(posedge clk_pll, negedge reset_) begin
         if (!reset_) begin
@@ -140,16 +143,22 @@ module main (
 
     // Control signal of internal fifo for LoopBack mode
     assign fifo_push    = (SLRD_loopback_d3_ == 1'b0);
-    assign fifo_pop     = (current_loop_back_state == loop_back_write);
-    assign fifo_flush   = (current_loop_back_state == loop_back_flush_fifo);
+    assign fifo_pop     = (current_sm_state == sm_write);
+    assign fifo_flush   = (current_sm_state == sm_flush_fifo);
 
     assign fifo_data_in = (SLRD_loopback_d3_ == 1'b0) ? DQ_d : 32'd0;
 
     // slave fifo address
     always @(*) begin
-        if((current_loop_back_state == loop_back_FLAGC_rcvd) | (current_loop_back_state == loop_back_wait_FLAGD) | (current_loop_back_state == loop_back_read) | (current_loop_back_state == loop_back_read_rd_and_oe_delay) | (current_loop_back_state == loop_back_read_oe_delay)) begin
+        if( (current_sm_state == sm_flagc_rcvd) |
+            (current_sm_state == sm_wait_flagd) |
+            (current_sm_state == sm_read) |
+            (current_sm_state == sm_read_rd_and_oe_delay) |
+            (current_sm_state == sm_read_oe_delay)) begin
             fifo_address = 2'b11;
-        end else fifo_address = 2'b00;
+        end else begin
+            fifo_address = 2'b00;
+        end
     end
 
     // flopping the output fifo address
@@ -164,9 +173,17 @@ module main (
     always @(posedge clk_pll, negedge reset_) begin
         if (!reset_) begin
             USER_LED[3:0] <= 4'b1111;
+            pb_old_state[3:0] <= 4'b1111;
+            led_update_flag <= 1'b0;
         end else begin
+            pb_old_state <= PB;
             if ((SLRD_loopback_d3_ == 1'b0) && (SLRD_loopback_d4_ == 1'b1)) begin
                 USER_LED[3:0] <= ~DQ_d[3:0];
+            end else if (pb_old_state != PB) begin
+                USER_LED[3:0] <= PB[3:0] ^ pb_old_state ^ USER_LED[3:0];
+                led_update_flag <= 1'b1;
+            end else if (current_sm_state == sm_wait_flaga) begin
+                led_update_flag <= 1'b0;
             end
         end
     end
@@ -175,9 +192,9 @@ module main (
     always @(posedge clk_pll, negedge reset_) begin
         if (!reset_) begin
             rd_oe_delay_cnt <= 1'b0;
-        end else if (current_loop_back_state == loop_back_read) begin
+        end else if (current_sm_state == sm_read) begin
             rd_oe_delay_cnt <= 1'b1;
-        end else if((current_loop_back_state == loop_back_read_rd_and_oe_delay) & (rd_oe_delay_cnt > 1'b0)) begin
+        end else if((current_sm_state == sm_read_rd_and_oe_delay) & (rd_oe_delay_cnt > 1'b0)) begin
             rd_oe_delay_cnt <= rd_oe_delay_cnt - 1'b1;
         end else begin
             rd_oe_delay_cnt <= rd_oe_delay_cnt;
@@ -188,9 +205,9 @@ module main (
     always @(posedge clk_pll, negedge reset_) begin
         if (!reset_) begin
             oe_delay_cnt <= 2'd0;
-        end else if (current_loop_back_state == loop_back_read_rd_and_oe_delay) begin
+        end else if (current_sm_state == sm_read_rd_and_oe_delay) begin
             oe_delay_cnt <= 2'd2;
-        end else if ((current_loop_back_state == loop_back_read_oe_delay) & (oe_delay_cnt > 1'b0)) begin
+        end else if ((current_sm_state == sm_read_oe_delay) & (oe_delay_cnt > 1'b0)) begin
             oe_delay_cnt <= oe_delay_cnt - 1'b1;
         end else begin
             oe_delay_cnt <= oe_delay_cnt;
@@ -200,100 +217,86 @@ module main (
     // LoopBack state machine
     always @(posedge clk_pll, negedge reset_) begin
         if (!reset_) begin
-            current_loop_back_state <= loop_back_idle;
+            current_sm_state <= sm_idle;
         end else begin
-            current_loop_back_state <= next_loop_back_state;
+            current_sm_state <= next_sm_state;
         end
     end
 
     // LoopBack mode state machine combo
     always @(*) begin
-        next_loop_back_state = current_loop_back_state;
-        case (current_loop_back_state)
-            loop_back_idle: begin
+        next_sm_state = current_sm_state;
+        case (current_sm_state)
+            sm_idle: begin
                 if (FLAGC_d == 1'b1) begin
-                    next_loop_back_state = loop_back_FLAGC_rcvd;
-                end else begin
-                    next_loop_back_state = loop_back_idle;
+                    next_sm_state = sm_flagc_rcvd;
+                end else if (led_update_flag) begin
+                    next_sm_state = sm_wait_flaga;
                 end
             end
-            loop_back_FLAGC_rcvd: begin
-                next_loop_back_state = loop_back_wait_FLAGD;
+            sm_flagc_rcvd: begin
+                next_sm_state = sm_wait_flagd;
             end
-            loop_back_wait_FLAGD: begin
+            sm_wait_flagd: begin
                 if (FLAGD_d == 1'b1) begin
-                    next_loop_back_state = loop_back_read;
-                end else begin
-                    next_loop_back_state = loop_back_wait_FLAGD;
+                    next_sm_state = sm_read;
                 end
             end
-            loop_back_read: begin
+            sm_read: begin
                 if (FLAGD_d == 1'b0) begin
-                    next_loop_back_state = loop_back_read_rd_and_oe_delay;
-                end else begin
-                    next_loop_back_state = loop_back_read;
+                    next_sm_state = sm_read_rd_and_oe_delay;
                 end
             end
-            loop_back_read_rd_and_oe_delay: begin
+            sm_read_rd_and_oe_delay: begin
                 if (rd_oe_delay_cnt == 0) begin
-                    next_loop_back_state = loop_back_read_oe_delay;
-                end else begin
-                    next_loop_back_state = loop_back_read_rd_and_oe_delay;
+                    next_sm_state = sm_read_oe_delay;
                 end
             end
-            loop_back_read_oe_delay: begin
+            sm_read_oe_delay: begin
                 if (oe_delay_cnt == 0) begin
-                    next_loop_back_state = loop_back_wait_FLAGA;
-                end else begin
-                    next_loop_back_state = loop_back_read_oe_delay;
+                    next_sm_state = sm_wait_flaga;
                 end
             end
-            loop_back_wait_FLAGA: begin
+            sm_wait_flaga: begin
                 if (FLAGA_d == 1'b1) begin
-                    next_loop_back_state = loop_back_wait_FLAGB;
-                end else begin
-                    next_loop_back_state = loop_back_wait_FLAGA;
+                    next_sm_state = sm_wait_flagb;
                 end
             end
-            loop_back_wait_FLAGB: begin
+            sm_wait_flagb: begin
                 if (FLAGB_d == 1'b1) begin
-                    next_loop_back_state = loop_back_write;
-                end else begin
-                    next_loop_back_state = loop_back_wait_FLAGB;
+                    next_sm_state = sm_write;
                 end
             end
-            loop_back_write: begin
+            sm_write: begin
                 if (FLAGB_d == 1'b0) begin
-                    next_loop_back_state = loop_back_write_wr_delay;
-                end else begin
-                    next_loop_back_state = loop_back_write;
+                    next_sm_state = sm_write_wr_delay;
                 end
             end
-            loop_back_write_wr_delay: begin
-                next_loop_back_state = loop_back_flush_fifo;
+            sm_write_wr_delay: begin
+                next_sm_state = sm_flush_fifo;
             end
-            loop_back_flush_fifo: begin
-                next_loop_back_state = loop_back_idle;
+            sm_flush_fifo: begin
+                next_sm_state = sm_idle;
             end
         endcase
     end
 
-    // fifo instantiation for loop back mode
-    fifo fifo_inst (
-        .din(fifo_data_in),
-        .write_busy(fifo_push),
-        .fifo_full(),
-        .dout(data_out_loopback),
-        .read_busy(fifo_pop),
-        .fifo_empty(),
-        .fifo_clk(clk_pll),
-        .reset_(reset_),
-        .fifo_flush(fifo_flush)
-    );
+    // // fifo instantiation for loop back mode
+    // fifo fifo_inst (
+    //     .din(fifo_data_in),
+    //     .write_busy(fifo_push),
+    //     .fifo_full(),
+    //     .dout(data_out_loopback),
+    //     .read_busy(fifo_pop),
+    //     .fifo_empty(),
+    //     .fifo_clk(clk_pll),
+    //     .reset_(reset_),
+    //     .fifo_flush(fifo_flush)
+    // );
 
     reg [31:0] data_out_loopback_d;
     always @(posedge clk_pll) begin
-        data_out_loopback_d <= data_out_loopback;
+        data_out_loopback_d <= {28'h0, ~USER_LED[3:0]};
     end
 
     assign DQ = (SLWR_loopback_1d_) ? 32'dz : data_out_loopback_d;
