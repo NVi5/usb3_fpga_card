@@ -6,55 +6,40 @@
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow), BulkInEpt(NULL), BulkOutEpt(NULL)
 {
-    this->USBDevice = new CCyUSBDevice(NULL);
-    this->find_transport();
+    this->thread_handle = NULL;
+    this->selectedDevice = new CCyUSBDevice(NULL, CYUSBDRV_GUID, true);
+    this->ui->setupUi(this);
+    this->communication_enabled = false;
 
-    ui->setupUi(this);
-    ui->btn0->setChecked(false);
-    ui->btn1->setChecked(false);
-    ui->btn2->setChecked(false);
-    ui->btn3->setChecked(false);
-    this->send_bulk(0);
-    this->read_bulk(NULL);
-    this->read_enabled = true;
+    this->get_devices();
+    this->get_endpoint_for_device();
 
-    this->thread_handle = CreateThread(NULL, 1024, thread_read, this, 0, NULL);
+    this->ui->btn0->setChecked(false);
+    this->ui->btn1->setChecked(false);
+    this->ui->btn2->setChecked(false);
+    this->ui->btn3->setChecked(false);
 }
 
 MainWindow::~MainWindow()
 {
-    this->read_enabled = false;
+    this->communication_enabled = false;
     delete ui;
-    delete this->USBDevice;
-    CloseHandle(this->thread_handle);
-}
-
-void MainWindow::find_transport(void)
-{
-    int eptCount = this->USBDevice->EndPointCount();
-    this->BulkOutEpt = nullptr;
-    this->BulkOutEpt = nullptr;
-    qDebug() << "Endpoints count: " << eptCount;
-    for (int i=0; i<eptCount; i++) {
-        qDebug("Found Endpoint: 0x%02X", this->USBDevice->EndPoints[i]->Address);
-        bool bIn = ((this->USBDevice->EndPoints[i]->Address & 0x80) == 0x80);
-        bool bSel = ((this->USBDevice->EndPoints[i]->Address & 0x0F) == 0x01);
-        bool bBulk = (this->USBDevice->EndPoints[i]->Attributes == 2);
-        if (bBulk && bIn && bSel) {
-            this->BulkInEpt = (CCyBulkEndPoint *) this->USBDevice->EndPoints[i];
-            qDebug("BulkInEpt EpAddr - 0x%02X", this->BulkInEpt->Address);
-        }
-        if (bBulk && !bIn && bSel) {
-            this->BulkOutEpt = (CCyBulkEndPoint *) this->USBDevice->EndPoints[i];
-            qDebug("BulkOutEpt EpAddr - 0x%02X", this->BulkOutEpt->Address);
-        }
+    if (this->selectedDevice)
+    {
+        if (this->selectedDevice->IsOpen()) this->selectedDevice->Close();
+        delete this->selectedDevice;
     }
-
-    Q_ASSERT(this->BulkOutEpt && this->BulkInEpt);
+    if (this->thread_handle)
+    {
+        CloseHandle(this->thread_handle);
+    }
 }
 
 void MainWindow::send_bulk(unsigned char state)
 {
+    Q_ASSERT(this->BulkOutEpt);
+    if (!this->communication_enabled) return;
+
     LONG packet_length = 64;
     UCHAR xd[64] = {state, 0xFF, 0};
     BOOL status = this->BulkOutEpt->XferData(xd, packet_length);
@@ -64,9 +49,12 @@ void MainWindow::send_bulk(unsigned char state)
 
 bool MainWindow::read_bulk(unsigned char *state)
 {
+    Q_ASSERT(this->BulkInEpt);
     bool status = true;
     UCHAR inBuf[1024];
     LONG packet_length = 1024;
+
+    if (!this->communication_enabled) return FALSE;
 
     OVERLAPPED inOvLap;
     inOvLap.hEvent = CreateEvent(NULL, false, false, L"CYUSB_IN");
@@ -85,6 +73,7 @@ bool MainWindow::read_bulk(unsigned char *state)
         else
         {
             qDebug() << "BulkInEpt unknown error - " << this->BulkInEpt->LastError;
+            this->ui->lb_status->setText("Error");
         }
     }
     this->BulkInEpt->FinishDataXfer(inBuf, packet_length, &inOvLap, inContext);
@@ -126,7 +115,7 @@ void MainWindow::set_button_state(unsigned char state)
 DWORD WINAPI MainWindow::thread_read(LPVOID argument) {
     MainWindow* threadObject = reinterpret_cast<MainWindow*>(argument);
     if (threadObject) {
-        while(threadObject->read_enabled)
+        while(threadObject->communication_enabled)
         {
             unsigned char state;
             if(threadObject->read_bulk(&state))
@@ -136,6 +125,112 @@ DWORD WINAPI MainWindow::thread_read(LPVOID argument) {
         }
     }
     return 0;
+}
+
+void MainWindow::select_endpoints(void)
+{
+    QString strINData, strOutData;
+    bool ok;
+    int inEpAddress = 0x0, outEpAddress = 0x0;
+
+    strINData = this->ui->cb_in_ept->currentText();
+    strOutData = this->ui->cb_out_ept->currentText();
+
+    strINData = strINData.right(4);
+    strOutData = strOutData.right(4);
+
+    inEpAddress = strINData.toInt(&ok, 16);
+    Q_ASSERT(ok);
+    outEpAddress = strOutData.toInt(&ok, 16);
+    Q_ASSERT(ok);
+
+    BulkOutEpt = this->selectedDevice->EndPointOf(outEpAddress);
+    BulkInEpt = this->selectedDevice->EndPointOf(inEpAddress);
+}
+
+bool MainWindow::get_devices()
+{
+    CCyUSBDevice *USBDevice;
+    USBDevice = new CCyUSBDevice(NULL, CYUSBDRV_GUID, true);
+    QString strDevice;
+    int nCboIndex = -1;
+    if (this->ui->cb_device->count() > 0 ) strDevice = this->ui->cb_device->currentText();
+
+    this->ui->cb_device->clear();
+
+    if (USBDevice == NULL) return FALSE;
+
+    for (int nCount = 0; nCount < USBDevice->DeviceCount(); nCount++ )
+    {
+        USBDevice->Open(nCount);
+
+        QString strDeviceData;
+        strDeviceData += QString("(0x%1 - 0x%2) ").arg(USBDevice->VendorID, 0 ,16).arg(USBDevice->ProductID, 0 ,16);
+        strDeviceData += QString(USBDevice->FriendlyName);
+        qDebug() << strDeviceData;
+
+        this->ui->cb_device->insertItem(nCount, strDeviceData);
+
+        if (nCboIndex == -1 && strDevice.isEmpty() == FALSE && strDevice == strDeviceData)
+            nCboIndex = nCount;
+
+        USBDevice->Close();
+    }
+    delete USBDevice;
+    if (this->ui->cb_device->count() >= 1 )
+    {
+        if (nCboIndex != -1 ) this->ui->cb_device->setCurrentIndex(nCboIndex);
+        else this->ui->cb_device->setCurrentIndex(0);
+    }
+
+    return TRUE;
+}
+
+bool MainWindow::get_endpoint_for_device()
+{
+    int nDeviceIndex = this->ui->cb_device->currentIndex();
+
+    this->ui->cb_in_ept->clear();
+    this->ui->cb_out_ept->clear();
+
+    // Is there any FX device connected to system?
+    if (nDeviceIndex == -1 || this->selectedDevice == NULL )
+    {
+        qDebug() << "get_endpoint_for_device - No devices selected";
+        return FALSE;
+    }
+
+    this->selectedDevice->Open(nDeviceIndex);
+    int interfaces = this->selectedDevice->AltIntfcCount()+1;
+
+    for (int nDeviceInterfaces = 0; nDeviceInterfaces < interfaces; nDeviceInterfaces++ )
+    {
+        this->selectedDevice->SetAltIntfc(nDeviceInterfaces);
+        int eptCnt = this->selectedDevice->EndPointCount();
+
+        for (int endPoint = 1; endPoint < eptCnt; endPoint++)
+        {
+            CCyUSBEndPoint *ept = this->selectedDevice->EndPoints[endPoint];
+
+            if (ept->Attributes == 2)
+            {
+                QString strData;
+                strData += ((ept->Attributes == 1) ? L"ISOC " : ((ept->Attributes == 2) ? L"BULK " : L"INTR "));
+                strData += (ept->bIn ? L"IN, " : L"OUT, ");
+                strData += QString("AltInt - %1 and EpAddr - 0x%2").arg(nDeviceInterfaces).arg(ept->Address, 0 ,16);
+
+                qDebug() << strData;
+
+                if (ept->bIn ) this->ui->cb_in_ept->addItem(strData);
+                else this->ui->cb_out_ept->addItem(strData);
+            }
+        }
+    }
+
+    if (this->ui->cb_in_ept->count() > 0 ) this->ui->cb_in_ept->setCurrentIndex(0);
+    if (this->ui->cb_out_ept->count() > 0 ) this->ui->cb_out_ept->setCurrentIndex(0);
+
+    return this->ui->cb_in_ept->count() > 0 && this->ui->cb_out_ept->count() > 0;
 }
 
 void MainWindow::on_btn0_clicked(bool checked)
@@ -162,3 +257,44 @@ void MainWindow::on_btn3_clicked(bool checked)
     qDebug("btn3 - %d", checked);
 }
 
+void MainWindow::on_btn_select_clicked()
+{
+    qDebug() << "on_btn_select_clicked";
+    if (this->thread_handle)
+    {
+        CloseHandle(this->thread_handle);
+    }
+
+    this->select_endpoints();
+    this->send_bulk(0);
+    this->read_bulk(NULL);
+    this->communication_enabled = true;
+    this->thread_handle = CreateThread(NULL, 1024, thread_read, this, 0, NULL);
+    this->ui->lb_status->setText("Selected");
+}
+
+
+void MainWindow::on_btn_refresh_clicked()
+{
+    qDebug() << "on_btn_refresh_clicked";
+    this->get_devices();
+}
+
+
+void MainWindow::on_cb_device_currentIndexChanged(int index)
+{
+    qDebug() << "on_cb_device " << index;
+    this->get_endpoint_for_device();
+}
+
+
+void MainWindow::on_cb_in_ept_currentIndexChanged(int index)
+{
+    qDebug() << "on_cb_in_ept " << index;
+}
+
+
+void MainWindow::on_cb_out_ept_currentIndexChanged(int index)
+{
+    qDebug() << "on_cb_out_ept " << index;
+}

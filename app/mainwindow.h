@@ -25,19 +25,31 @@ private slots:
 
     void on_btn3_clicked(bool checked);
 
+    void on_btn_select_clicked();
+
+    void on_btn_refresh_clicked();
+
+    void on_cb_device_currentIndexChanged(int index);
+
+    void on_cb_in_ept_currentIndexChanged(int index);
+
+    void on_cb_out_ept_currentIndexChanged(int index);
+
 private:
-    void find_transport(void);
     void send_bulk(unsigned char state);
     bool read_bulk(unsigned char *state);
     unsigned char get_button_state(void);
     void set_button_state(unsigned char state);
+    void select_endpoints(void);
+    bool get_devices();
+    bool get_endpoint_for_device();
     static DWORD WINAPI thread_read(LPVOID argument);
 
-    bool read_enabled;
+    bool communication_enabled;
     HANDLE thread_handle;
     Ui::MainWindow *ui;
-    CCyUSBDevice *USBDevice;
-    CCyBulkEndPoint *BulkInEpt;
-    CCyBulkEndPoint *BulkOutEpt;
+    CCyUSBDevice *selectedDevice;
+    CCyUSBEndPoint *BulkInEpt;
+    CCyUSBEndPoint *BulkOutEpt;
 };
 #endif // MAINWINDOW_H
