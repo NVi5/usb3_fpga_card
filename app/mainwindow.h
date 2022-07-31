@@ -36,6 +36,7 @@ private slots:
     void on_cb_out_ept_currentIndexChanged(int index);
 
 private:
+    void plot();
     void send_bulk(unsigned char state);
     bool read_bulk(unsigned char *state);
     unsigned char get_button_state(void);

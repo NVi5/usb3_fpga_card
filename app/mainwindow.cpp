@@ -18,6 +18,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     this->ui->btn1->setChecked(false);
     this->ui->btn2->setChecked(false);
     this->ui->btn3->setChecked(false);
+
+    this->plot();
 }
 
 MainWindow::~MainWindow()
@@ -33,6 +35,48 @@ MainWindow::~MainWindow()
     {
         CloseHandle(this->thread_handle);
     }
+}
+
+void MainWindow::plot()
+{
+//    ui->qplot->legend->setVisible(true);
+    ui->qplot->legend->setFont(QFont("Helvetica", 9));
+    QPen pen;
+    QStringList lineNames;
+//    lineNames << "lsNone" << "lsLine" << "lsStepLeft" << "lsStepRight" << "lsStepCenter" << "lsImpulse";
+
+    for (int i=0; i<8; ++i)
+    {
+        ui->qplot->addGraph();
+        pen.setColor(QColor(qSin(i*1+1.2)*80+80, qSin(i*0.3+0)*80+80, qSin(i*0.3+1.5)*80+80));
+        ui->qplot->graph()->setPen(pen);
+//        ui->qplot->graph()->setName(lineNames.at(i-QCPGraph::lsNone));
+        ui->qplot->graph()->setLineStyle(QCPGraph::lsStepLeft);
+
+        QVector<double> x(16384), y(16384);
+        for (int j=0; j<16384; ++j)
+        {
+            x[j] = j;
+            y[j] = (double)(QRandomGenerator::global()->bounded(0, 2)) + i*2;
+        }
+        ui->qplot->graph()->setData(x, y);
+        ui->qplot->graph()->rescaleAxes(true);
+    }
+//    // zoom out a bit:
+    ui->qplot->yAxis->scaleRange(1.1, ui->qplot->yAxis->range().center());
+    ui->qplot->xAxis->scaleRange(1.1, ui->qplot->xAxis->range().center());
+    // set blank axis lines:
+    ui->qplot->xAxis->setTicks(true);
+    ui->qplot->yAxis->setTicks(true);
+    ui->qplot->xAxis->setTickLabels(true);
+    ui->qplot->yAxis->setTickLabels(false);
+    ui->qplot->xAxis->setVisible(true);
+    ui->qplot->yAxis->setVisible(true);
+    // make top right axes clones of bottom left axes:
+    ui->qplot->axisRect()->setupFullAxesBox();
+    ui->qplot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables);
+    ui->qplot->axisRect()->setRangeDrag(Qt::Horizontal);
+    ui->qplot->axisRect()->setRangeZoom(Qt::Horizontal);
 }
 
 void MainWindow::send_bulk(unsigned char state)
