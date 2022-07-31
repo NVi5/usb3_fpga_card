@@ -55,8 +55,8 @@ void MainWindow::find_transport(void)
 
 void MainWindow::send_bulk(unsigned char state)
 {
-    LONG packet_length = 1024;
-    UCHAR xd[1024] = {state, 0xFF, 0};
+    LONG packet_length = 64;
+    UCHAR xd[64] = {state, 0xFF, 0};
     BOOL status = this->BulkOutEpt->XferData(xd, packet_length);
 
     qDebug() << "Sent: " << state << "Result: " << status;
