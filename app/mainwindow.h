@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include "CyAPI.h"
+#include "qcustomplot.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -35,8 +36,12 @@ private slots:
 
     void on_cb_out_ept_currentIndexChanged(int index);
 
+    void xAxisChanged(const QCPRange & newRange);
+    void yAxisChanged(const QCPRange & newRange);
+
 private:
     void plot();
+    void limitAxisRange(QCPAxis * axis, const QCPRange & newRange, const QCPRange & limitRange);
     void send_bulk(unsigned char state);
     bool read_bulk(unsigned char *state);
     unsigned char get_button_state(void);

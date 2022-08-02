@@ -39,6 +39,8 @@ MainWindow::~MainWindow()
 
 void MainWindow::plot()
 {
+    connect(ui->qplot->xAxis, SIGNAL(rangeChanged(QCPRange)), this, SLOT(xAxisChanged(QCPRange)));
+    connect(ui->qplot->yAxis, SIGNAL(rangeChanged(QCPRange)), this, SLOT(yAxisChanged(QCPRange)));
 //    ui->qplot->legend->setVisible(true);
     ui->qplot->legend->setFont(QFont("Helvetica", 9));
     QPen pen;
@@ -64,7 +66,7 @@ void MainWindow::plot()
     }
 //    // zoom out a bit:
     ui->qplot->yAxis->scaleRange(1.1, ui->qplot->yAxis->range().center());
-    ui->qplot->xAxis->scaleRange(1.1, ui->qplot->xAxis->range().center());
+//    ui->qplot->xAxis->scaleRange(1.1, ui->qplot->xAxis->range().center());
     // set blank axis lines:
     ui->qplot->xAxis->setTicks(true);
     ui->qplot->yAxis->setTicks(true);
@@ -77,6 +79,54 @@ void MainWindow::plot()
     ui->qplot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables);
     ui->qplot->axisRect()->setRangeDrag(Qt::Horizontal);
     ui->qplot->axisRect()->setRangeZoom(Qt::Horizontal);
+
+    ui->qplot->setProperty("xmin", ui->qplot->xAxis->range().lower);
+    ui->qplot->setProperty("xmax", ui->qplot->xAxis->range().upper);
+    ui->qplot->setProperty("ymin", ui->qplot->yAxis->range().lower);
+    ui->qplot->setProperty("ymax", ui->qplot->yAxis->range().upper);
+}
+
+void MainWindow::xAxisChanged(const QCPRange & newRange)
+{
+    QCPAxis * axis = qobject_cast<QCPAxis *>(QObject::sender());
+    QCustomPlot * plot = axis->parentPlot();
+
+    QCPRange limitRange(plot->property("xmin").toDouble(), plot->property("xmax").toDouble());
+    limitAxisRange(axis, newRange, limitRange);
+}
+
+void MainWindow::yAxisChanged(const QCPRange & newRange)
+{
+    QCPAxis * axis = qobject_cast<QCPAxis *>(QObject::sender());
+    QCustomPlot * plot = axis->parentPlot();
+
+    QCPRange limitRange(plot->property("ymin").toDouble(), plot->property("ymax").toDouble());
+    limitAxisRange(axis, newRange, limitRange);
+}
+
+
+void MainWindow::limitAxisRange(QCPAxis * axis, const QCPRange & newRange, const QCPRange & limitRange)
+{
+    auto lowerBound = limitRange.lower;
+    auto upperBound = limitRange.upper;
+
+    // code assumes upperBound > lowerBound
+    QCPRange fixedRange(newRange);
+    if (fixedRange.lower < lowerBound)
+    {
+        fixedRange.lower = lowerBound;
+        fixedRange.upper = lowerBound + newRange.size();
+        if (fixedRange.upper > upperBound || qFuzzyCompare(newRange.size(), upperBound-lowerBound))
+            fixedRange.upper = upperBound;
+        axis->setRange(fixedRange); // adapt this line to use your plot/axis
+    } else if (fixedRange.upper > upperBound)
+    {
+        fixedRange.upper = upperBound;
+        fixedRange.lower = upperBound - newRange.size();
+        if (fixedRange.lower < lowerBound || qFuzzyCompare(newRange.size(), upperBound-lowerBound))
+            fixedRange.lower = lowerBound;
+        axis->setRange(fixedRange); // adapt this line to use your plot/axis
+    }
 }
 
 void MainWindow::send_bulk(unsigned char state)
@@ -311,9 +361,8 @@ void MainWindow::on_btn_select_clicked()
 
     this->select_endpoints();
     this->send_bulk(0);
-    this->read_bulk(NULL);
     this->communication_enabled = true;
-    this->thread_handle = CreateThread(NULL, 1024, thread_read, this, 0, NULL);
+    this->thread_handle = CreateThread(NULL, 8192, thread_read, this, 0, NULL);
     this->ui->lb_status->setText("Selected");
 }
 
