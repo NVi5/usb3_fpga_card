@@ -77,6 +77,7 @@ CyU3PDmaChannel glChHandleSlFifoPtoU;   /* DMA Channel handle for P2U transfer. 
 uint32_t glDMARxCount = 0;               /* Counter to track the number of buffers received from USB. */
 uint32_t glDMATxCount = 0;               /* Counter to track the number of buffers sent to USB. */
 CyBool_t glIsApplnActive = CyFalse;      /* Whether the loopback application is active or not. */
+uint8_t burstLength = 0;
 
 /* Application Error Handler */
 void
@@ -229,14 +230,17 @@ CyFxSlFifoApplnStart (
     {
         case CY_U3P_FULL_SPEED:
             size = 64;
+            burstLength = 0;
             break;
 
         case CY_U3P_HIGH_SPEED:
             size = 512;
+            burstLength = 1;
             break;
 
         case  CY_U3P_SUPER_SPEED:
             size = 1024;
+            burstLength = 16;
             break;
 
         default:
@@ -248,7 +252,7 @@ CyFxSlFifoApplnStart (
     CyU3PMemSet ((uint8_t *)&epCfg, 0, sizeof (epCfg));
     epCfg.enable = CyTrue;
     epCfg.epType = CY_U3P_USB_EP_BULK;
-    epCfg.burstLen = 1;
+    epCfg.burstLen = burstLength;
     epCfg.streams = 0;
     epCfg.pcktSize = size;
 
@@ -270,8 +274,8 @@ CyFxSlFifoApplnStart (
 
     /* Create a DMA MANUAL channel for U2P transfer.
      * DMA size is set based on the USB speed. */
-    dmaCfg.size  = size;
-    dmaCfg.count = CY_FX_SLFIFO_DMA_BUF_COUNT;
+    dmaCfg.size  = DMA_BUF_SIZE * size;
+    dmaCfg.count = CY_FX_SLFIFO_DMA_BUF_COUNT_U_2_P;
     dmaCfg.dmaMode = CY_U3P_DMA_MODE_BYTE;
     /* Enabling the callback for produce event. */
     dmaCfg.notification = CY_U3P_DMA_CB_PROD_EVENT;
@@ -292,6 +296,7 @@ CyFxSlFifoApplnStart (
     }
 
     /* Create a DMA MANUAL channel for P2U transfer. */
+    dmaCfg.count = CY_FX_SLFIFO_DMA_BUF_COUNT_P_2_U;
     dmaCfg.prodSckId = CY_FX_PRODUCER_PPORT_SOCKET;
     dmaCfg.consSckId = CY_FX_CONSUMER_USB_SOCKET;
     dmaCfg.cb = CyFxSlFifoPtoUDmaCallback;

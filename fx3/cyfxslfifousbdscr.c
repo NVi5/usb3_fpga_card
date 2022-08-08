@@ -23,7 +23,7 @@
 /* This file contains the USB enumeration descriptors for the slave FIFO application example.
  * The descriptor arrays must be 32 byte aligned and multiple of 32 bytes if the D-cache is
  * turned on. If the linker used is not capable of supporting the aligned feature for this,
- * either the descriptors must be placed in a different section and the section should be 
+ * either the descriptors must be placed in a different section and the section should be
  * 32 byte aligned and 32 byte multiple; or dynamically allocated buffer allocated using
  * CyU3PDmaBufferAlloc must be used, and the descriptor must be loaded into it. The example
  * assumes that the aligned attribute for 32 bytes is supported by the linker. Do not add
@@ -147,7 +147,7 @@ const uint8_t CyFxUSBSSConfigDscr[] __attribute__ ((aligned (32))) =
     /* Super speed endpoint companion descriptor for producer EP */
     0x06,                           /* Descriptor size */
     CY_U3P_SS_EP_COMPN_DESCR,       /* SS endpoint companion descriptor type */
-    0x00,                           /* Max no. of packets in a burst : 0: burst 1 packet at a time */
+    BURST_LEN-1,                    /* Max no. of packets in a burst : 0: burst 1 packet at a time */
     0x00,                           /* Max streams for bulk EP = 0 (No streams) */
     0x00,0x00,                      /* Service interval for the EP : 0 for bulk */
 
@@ -162,7 +162,7 @@ const uint8_t CyFxUSBSSConfigDscr[] __attribute__ ((aligned (32))) =
     /* Super speed endpoint companion descriptor for consumer EP */
     0x06,                           /* Descriptor size */
     CY_U3P_SS_EP_COMPN_DESCR,       /* SS endpoint companion descriptor type */
-    0x00,                           /* Max no. of packets in a burst : 0: burst 1 packet at a time */
+    BURST_LEN-1,                    /* Max no. of packets in a burst : 0: burst 1 packet at a time */
     0x00,                           /* Max streams for bulk EP = 0 (No streams) */
     0x00,0x00                       /* Service interval for the EP : 0 for bulk */
 };
@@ -287,4 +287,3 @@ const uint8_t CyFxUSBProductDscr[] __attribute__ ((aligned (32))) =
 const uint8_t CyFxUsbDscrAlignBuffer[32] __attribute__ ((aligned (32)));
 
 /* [ ] */
-
