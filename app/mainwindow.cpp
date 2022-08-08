@@ -6,7 +6,6 @@
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow), BulkInEpt(NULL), BulkOutEpt(NULL)
 {
-    this->thread_handle = NULL;
     this->selectedDevice = new CCyUSBDevice(NULL, CYUSBDRV_GUID, true);
     this->ui->setupUi(this);
     this->communication_enabled = false;
@@ -23,10 +22,6 @@ MainWindow::~MainWindow()
     {
         if (this->selectedDevice->IsOpen()) this->selectedDevice->Close();
         delete this->selectedDevice;
-    }
-    if (this->thread_handle)
-    {
-        CloseHandle(this->thread_handle);
     }
 }
 
@@ -128,8 +123,8 @@ void MainWindow::send_bulk(unsigned char state)
     if (!this->communication_enabled) return;
 
     LONG packet_length = 64;
-    UCHAR xd[64] = {state, 0xFF, 0};
-    BOOL status = this->BulkOutEpt->XferData(xd, packet_length);
+    UCHAR buf[64] = {state, 0xFF, 0};
+    BOOL status = this->BulkOutEpt->XferData(buf, packet_length);
 
     qDebug() << "Sent: " << state << "Result: " << status;
 }
@@ -180,33 +175,6 @@ bool MainWindow::read_bulk(unsigned char *state)
     this->plot(inBuf);
 
     return status;
-}
-
-unsigned char MainWindow::get_button_state(void)
-{
-    unsigned char state = 0;
-    qDebug() << "get_button_state " << state;
-    return state;
-}
-
-void MainWindow::set_button_state(unsigned char state)
-{
-    qDebug() << "set_button_state " << state;
-}
-
-DWORD WINAPI MainWindow::thread_read(LPVOID argument) {
-    MainWindow* threadObject = reinterpret_cast<MainWindow*>(argument);
-    if (threadObject) {
-//        while(threadObject->communication_enabled)
-//        {
-//            unsigned char state;
-//            if(threadObject->read_bulk(&state))
-//            {
-////                threadObject->set_button_state(state);
-//            }
-//        }
-    }
-    return 0;
 }
 
 void MainWindow::select_endpoints(void)
@@ -315,43 +283,13 @@ bool MainWindow::get_endpoint_for_device()
     return this->ui->cb_in_ept->count() > 0 && this->ui->cb_out_ept->count() > 0;
 }
 
-void MainWindow::on_btn0_clicked(bool checked)
-{
-    this->send_bulk(get_button_state());
-    this->read_bulk(NULL);
-    qDebug("btn0 - %d", checked);
-}
-
-void MainWindow::on_btn1_clicked(bool checked)
-{
-    this->send_bulk(get_button_state());
-    qDebug("btn1 - %d", checked);
-}
-
-void MainWindow::on_btn2_clicked(bool checked)
-{
-    this->send_bulk(get_button_state());
-    qDebug("btn2 - %d", checked);
-}
-
-void MainWindow::on_btn3_clicked(bool checked)
-{
-    this->send_bulk(get_button_state());
-    qDebug("btn3 - %d", checked);
-}
-
 void MainWindow::on_btn_select_clicked()
 {
     qDebug() << "on_btn_select_clicked";
-    if (this->thread_handle)
-    {
-        CloseHandle(this->thread_handle);
-    }
 
     this->select_endpoints();
     this->send_bulk(0);
     this->communication_enabled = true;
-    this->thread_handle = CreateThread(NULL, 32768, thread_read, this, 0, NULL);
     this->ui->lb_status->setText("Selected");
 }
 
@@ -359,6 +297,7 @@ void MainWindow::on_btn_select_clicked()
 void MainWindow::on_btn_refresh_clicked()
 {
     qDebug() << "on_btn_refresh_clicked";
+
     this->get_devices();
 }
 
@@ -366,6 +305,7 @@ void MainWindow::on_btn_refresh_clicked()
 void MainWindow::on_cb_device_currentIndexChanged(int index)
 {
     qDebug() << "on_cb_device " << index;
+
     this->get_endpoint_for_device();
 }
 
@@ -379,4 +319,12 @@ void MainWindow::on_cb_in_ept_currentIndexChanged(int index)
 void MainWindow::on_cb_out_ept_currentIndexChanged(int index)
 {
     qDebug() << "on_cb_out_ept " << index;
+}
+
+void MainWindow::on_start_btn_clicked()
+{
+    qDebug() << "on_start_btn_clicked";
+
+    this->send_bulk(0);
+    this->read_bulk(NULL);
 }
