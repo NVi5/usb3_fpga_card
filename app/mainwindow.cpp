@@ -12,6 +12,17 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     this->get_devices();
     this->get_endpoint_for_device();
+
+    QStringList items = {"fpga_counter0", "fpga_counter1", "fpga_counter2", "fpga_counter3", "fpga_counter4", "fpga_counter5", "fpga_counter6", "fpga_counter7"};
+    QRegularExpression exp("ch[0-9]");
+    QList<QComboBox *> channels = this->ui->channelBox->findChildren<QComboBox *>(exp);
+
+    int counter=0;
+    for(QComboBox *child : channels)
+    {
+        child->addItems(items);
+        child->setCurrentIndex(counter++);
+    }
 }
 
 MainWindow::~MainWindow()
