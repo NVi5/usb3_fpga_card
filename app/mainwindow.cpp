@@ -13,11 +13,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     this->get_devices();
     this->get_endpoint_for_device();
-
-    this->ui->btn0->setChecked(false);
-    this->ui->btn1->setChecked(false);
-    this->ui->btn2->setChecked(false);
-    this->ui->btn3->setChecked(false);
 }
 
 MainWindow::~MainWindow()
@@ -189,10 +184,7 @@ bool MainWindow::read_bulk(unsigned char *state)
 
 unsigned char MainWindow::get_button_state(void)
 {
-    unsigned char state =   (unsigned char)ui->btn0->isChecked() << 0 |
-                            (unsigned char)ui->btn1->isChecked() << 1 |
-                            (unsigned char)ui->btn2->isChecked() << 2 |
-                            (unsigned char)ui->btn3->isChecked() << 3;
+    unsigned char state = 0;
     qDebug() << "get_button_state " << state;
     return state;
 }
@@ -200,10 +192,6 @@ unsigned char MainWindow::get_button_state(void)
 void MainWindow::set_button_state(unsigned char state)
 {
     qDebug() << "set_button_state " << state;
-    ui->btn0->setChecked(state & (1<<0));
-    ui->btn1->setChecked(state & (1<<1));
-    ui->btn2->setChecked(state & (1<<2));
-    ui->btn3->setChecked(state & (1<<3));
 }
 
 DWORD WINAPI MainWindow::thread_read(LPVOID argument) {
