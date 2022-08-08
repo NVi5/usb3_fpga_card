@@ -23,11 +23,11 @@ module main (
 );
 
     reg [3:0] pb_old_state;
-    reg       led_update_flag;
 
     reg [1:0] oe_delay_cnt;
     reg rd_oe_delay_cnt;
     wire [31:0] fifo_data_in;
+    reg [31:0] data_gen;
 
     wire [31:0] data_out;
     reg [31:0] DQ_d;
@@ -69,7 +69,6 @@ module main (
     assign SLCS  = 1'b0;
     assign PKEND = 1'b1;
 
-    // assign clk_pll = clk;        //for TB
     assign reset_ = lock;
 
     // clock generation(pll instantiation)
@@ -170,20 +169,19 @@ module main (
         end
     end
 
+    reg [31:0] transfer_ctr;
     always @(posedge clk_pll, negedge reset_) begin
         if (!reset_) begin
+            transfer_ctr <= 0;
             USER_LED[3:0] <= 4'b1111;
             pb_old_state[3:0] <= 4'b1111;
-            led_update_flag <= 1'b0;
         end else begin
             pb_old_state <= PB;
-            if ((SLRD_loopback_d3_ == 1'b0) && (SLRD_loopback_d4_ == 1'b1)) begin
-                USER_LED[3:0] <= ~DQ_d[3:0];
+            if (transfer_ctr > 0) begin
+                if (current_sm_state == sm_wait_flaga)
+                    transfer_ctr <= transfer_ctr - 1;
             end else if (pb_old_state != PB) begin
-                USER_LED[3:0] <= PB[3:0] ^ pb_old_state ^ USER_LED[3:0];
-                led_update_flag <= 1'b1;
-            end else if (current_sm_state == sm_wait_flaga) begin
-                led_update_flag <= 1'b0;
+                transfer_ctr <= 2;
             end
         end
     end
@@ -230,7 +228,7 @@ module main (
             sm_idle: begin
                 if (FLAGC_d == 1'b1) begin
                     next_sm_state = sm_flagc_rcvd;
-                end else if (led_update_flag) begin
+                end else if (transfer_ctr > 0) begin
                     next_sm_state = sm_wait_flaga;
                 end
             end
@@ -282,7 +280,7 @@ module main (
     end
 
     // // fifo instantiation for loop back mode
-    // fifo fifo_inst (
+    // fifo fifo_inst(
     //     .din(fifo_data_in),
     //     .write_busy(fifo_push),
     //     .fifo_full(),
@@ -296,7 +294,17 @@ module main (
 
     reg [31:0] data_out_loopback_d;
     always @(posedge clk_pll) begin
-        data_out_loopback_d <= {28'h0, ~USER_LED[3:0]};
+        // data_out_loopback_d <= {28'h0, ~USER_LED[3:0]};
+        data_out_loopback_d <= data_gen;
+    end
+
+    // data generator counter
+    always @(posedge clk_pll, negedge reset_)begin
+        if(!reset_)begin
+            data_gen <= 32'd0;
+        end else begin
+            data_gen <= data_gen + 1;
+        end
     end
 
     assign DQ = (SLWR_loopback_1d_) ? 32'dz : data_out_loopback_d;

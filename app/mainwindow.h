@@ -40,7 +40,7 @@ private slots:
     void yAxisChanged(const QCPRange & newRange);
 
 private:
-    void plot();
+    void plot(UCHAR *buf);
     void limitAxisRange(QCPAxis * axis, const QCPRange & newRange, const QCPRange & limitRange);
     void send_bulk(unsigned char state);
     bool read_bulk(unsigned char *state);

@@ -18,8 +18,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     this->ui->btn1->setChecked(false);
     this->ui->btn2->setChecked(false);
     this->ui->btn3->setChecked(false);
-
-    this->plot();
 }
 
 MainWindow::~MainWindow()
@@ -37,7 +35,7 @@ MainWindow::~MainWindow()
     }
 }
 
-void MainWindow::plot()
+void MainWindow::plot(UCHAR *buf)
 {
     connect(ui->qplot->xAxis, SIGNAL(rangeChanged(QCPRange)), this, SLOT(xAxisChanged(QCPRange)));
     connect(ui->qplot->yAxis, SIGNAL(rangeChanged(QCPRange)), this, SLOT(yAxisChanged(QCPRange)));
@@ -55,11 +53,11 @@ void MainWindow::plot()
 //        ui->qplot->graph()->setName(lineNames.at(i-QCPGraph::lsNone));
         ui->qplot->graph()->setLineStyle(QCPGraph::lsStepLeft);
 
-        QVector<double> x(16384), y(16384);
-        for (int j=0; j<16384; ++j)
+        QVector<double> x(16384/4), y(16384/4);
+        for (int j=0; j<16384/4; ++j)
         {
             x[j] = j;
-            y[j] = (double)(QRandomGenerator::global()->bounded(0, 2)) + i*2;
+            y[j] = (double)((buf[j*4] >> i) & 1) + i*2;
         }
         ui->qplot->graph()->setData(x, y);
         ui->qplot->graph()->rescaleAxes(true);
@@ -145,8 +143,8 @@ bool MainWindow::read_bulk(unsigned char *state)
 {
     Q_ASSERT(this->BulkInEpt);
     bool status = true;
-    UCHAR inBuf[1024];
-    LONG packet_length = 1024;
+    UCHAR inBuf[16*1024];
+    LONG packet_length = 16*1024;
 
     if (!this->communication_enabled) return FALSE;
 
@@ -184,6 +182,8 @@ bool MainWindow::read_bulk(unsigned char *state)
         *state = inBuf[0];
     }
 
+    this->plot(inBuf);
+
     return status;
 }
 
@@ -209,14 +209,14 @@ void MainWindow::set_button_state(unsigned char state)
 DWORD WINAPI MainWindow::thread_read(LPVOID argument) {
     MainWindow* threadObject = reinterpret_cast<MainWindow*>(argument);
     if (threadObject) {
-        while(threadObject->communication_enabled)
-        {
-            unsigned char state;
-            if(threadObject->read_bulk(&state))
-            {
-                threadObject->set_button_state(state);
-            }
-        }
+//        while(threadObject->communication_enabled)
+//        {
+//            unsigned char state;
+//            if(threadObject->read_bulk(&state))
+//            {
+////                threadObject->set_button_state(state);
+//            }
+//        }
     }
     return 0;
 }
@@ -330,6 +330,7 @@ bool MainWindow::get_endpoint_for_device()
 void MainWindow::on_btn0_clicked(bool checked)
 {
     this->send_bulk(get_button_state());
+    this->read_bulk(NULL);
     qDebug("btn0 - %d", checked);
 }
 
@@ -362,7 +363,7 @@ void MainWindow::on_btn_select_clicked()
     this->select_endpoints();
     this->send_bulk(0);
     this->communication_enabled = true;
-    this->thread_handle = CreateThread(NULL, 8192, thread_read, this, 0, NULL);
+    this->thread_handle = CreateThread(NULL, 32768, thread_read, this, 0, NULL);
     this->ui->lb_status->setText("Selected");
 }
 
