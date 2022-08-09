@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include <iostream>
 #include <QDebug>
+#include <QColor>
 #include "Windows.h"
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow), BulkInEpt(NULL), BulkOutEpt(NULL)
@@ -13,9 +14,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     this->get_devices();
     this->get_endpoint_for_device();
 
-    QStringList items = {"fpga_counter0", "fpga_counter1", "fpga_counter2", "fpga_counter3", "fpga_counter4", "fpga_counter5", "fpga_counter6", "fpga_counter7"};
-    QRegularExpression exp("ch[0-9]");
-    QList<QComboBox *> channels = this->ui->channelBox->findChildren<QComboBox *>(exp);
+    QStringList items = {"fpga_counter0", "fpga_counter1", "fpga_counter2", "fpga_counter3", "fpga_counter4", "fpga_counter5", "fpga_counter6", "fpga_counter7", "disabled"};
+    QRegularExpression exp("ch[0-7]");
+    QList<QComboBox *> channels = ui->channelBox->findChildren<QComboBox *>(exp);
 
     int counter=0;
     for(QComboBox *child : channels)
@@ -23,6 +24,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         child->addItems(items);
         child->setCurrentIndex(counter++);
     }
+
+    this->init_plot();
 }
 
 MainWindow::~MainWindow()
@@ -36,53 +39,107 @@ MainWindow::~MainWindow()
     }
 }
 
-void MainWindow::plot(UCHAR *buf)
+void MainWindow::init_plot()
 {
+    QList<QColor> colorList = {
+        QColorConstants::Svg::mediumblue,
+        QColorConstants::Svg::darkmagenta,
+        QColorConstants::Svg::darkgreen,
+        QColorConstants::Svg::deeppink,
+        QColorConstants::Svg::indigo,
+        QColorConstants::Svg::mediumaquamarine,
+        QColorConstants::Svg::orange,
+        QColorConstants::Svg::maroon,
+    };
+    QPen pen;
+    QStringList lineNames = {"CH0", "CH1", "CH2", "CH3", "CH4", "CH5", "CH6", "CH7"};
+
     connect(ui->qplot->xAxis, SIGNAL(rangeChanged(QCPRange)), this, SLOT(xAxisChanged(QCPRange)));
     connect(ui->qplot->yAxis, SIGNAL(rangeChanged(QCPRange)), this, SLOT(yAxisChanged(QCPRange)));
-//    ui->qplot->legend->setVisible(true);
+
+    ui->qplot->legend->setVisible(true);
     ui->qplot->legend->setFont(QFont("Helvetica", 9));
-    QPen pen;
-    QStringList lineNames;
-//    lineNames << "lsNone" << "lsLine" << "lsStepLeft" << "lsStepRight" << "lsStepCenter" << "lsImpulse";
 
     for (int i=0; i<8; ++i)
     {
         ui->qplot->addGraph();
-        pen.setColor(QColor(qSin(i*1+1.2)*80+80, qSin(i*0.3+0)*80+80, qSin(i*0.3+1.5)*80+80));
+        pen.setColor(colorList.at(i));
+        pen.setWidthF(2);
         ui->qplot->graph()->setPen(pen);
-//        ui->qplot->graph()->setName(lineNames.at(i-QCPGraph::lsNone));
+        ui->qplot->graph()->setName(lineNames.at(i));
         ui->qplot->graph()->setLineStyle(QCPGraph::lsStepLeft);
 
-        QVector<double> x(16384/4), y(16384/4);
-        for (int j=0; j<16384/4; ++j)
-        {
-            x[j] = j;
-            y[j] = (double)((buf[j*4] >> i) & 1) + i*2;
-        }
-        ui->qplot->graph()->setData(x, y);
+        QVector<double> x(2), y(2);
+        x[0] = 0;
+        x[1] = 1024;
+        y[0] = (7-i)*2.5;
+        y[1] = y[0];
+
+        ui->qplot->graph()->setData(x, y, TRUE);
         ui->qplot->graph()->rescaleAxes(true);
     }
-//    // zoom out a bit:
+
+    // zoom out a bit
     ui->qplot->yAxis->scaleRange(1.1, ui->qplot->yAxis->range().center());
-//    ui->qplot->xAxis->scaleRange(1.1, ui->qplot->xAxis->range().center());
-    // set blank axis lines:
+
+    // set blank axis lines
     ui->qplot->xAxis->setTicks(true);
     ui->qplot->yAxis->setTicks(true);
     ui->qplot->xAxis->setTickLabels(true);
     ui->qplot->yAxis->setTickLabels(false);
     ui->qplot->xAxis->setVisible(true);
     ui->qplot->yAxis->setVisible(true);
-    // make top right axes clones of bottom left axes:
+    ui->qplot->yAxis->ticker()->setTickCount(8);
+
+    // make top right axes clones of bottom left axes
     ui->qplot->axisRect()->setupFullAxesBox();
     ui->qplot->setInteractions(QCP::iRangeDrag | QCP::iRangeZoom | QCP::iSelectPlottables);
     ui->qplot->axisRect()->setRangeDrag(Qt::Horizontal);
     ui->qplot->axisRect()->setRangeZoom(Qt::Horizontal);
 
+    // add zoom limits
     ui->qplot->setProperty("xmin", ui->qplot->xAxis->range().lower);
     ui->qplot->setProperty("xmax", ui->qplot->xAxis->range().upper);
-    ui->qplot->setProperty("ymin", ui->qplot->yAxis->range().lower);
-    ui->qplot->setProperty("ymax", ui->qplot->yAxis->range().upper);
+}
+
+void MainWindow::update_plot(QList<unsigned char> &new_data)
+{
+    ui->lb_status->setText("Drawing plot");
+
+    QVector<double> *x_vect = new QVector<double>;
+    QVector<double> *y_vect = new QVector<double>;
+    x_vect->reserve(new_data.size());
+    y_vect->reserve(new_data.size());
+
+    for (int j=0; j<new_data.size(); ++j)
+    {
+        x_vect->insert(j, j);
+    }
+
+    for (int i=0; i<8; ++i)
+    {
+        for (int j=0; j<new_data.size(); ++j)
+        {
+            y_vect->insert(j,((new_data.at(j) >> i) & 1)*1.25 + i*2.5);
+        }
+
+        ui->qplot->graph(7-i)->setData(*x_vect, *y_vect, TRUE);
+
+        y_vect->clear();
+    }
+
+    delete x_vect;
+    delete y_vect;
+
+    ui->qplot->rescaleAxes(false);
+    ui->qplot->yAxis->scaleRange(1.1, ui->qplot->yAxis->range().center());
+
+    ui->qplot->setProperty("xmin", ui->qplot->xAxis->range().lower);
+    ui->qplot->setProperty("xmax", ui->qplot->xAxis->range().upper);
+
+    ui->qplot->replot();
+
+    ui->lb_status->setText("Plot ready");
 }
 
 void MainWindow::xAxisChanged(const QCPRange & newRange)
@@ -152,6 +209,8 @@ bool MainWindow::read_bulk(unsigned char *state)
     OVERLAPPED inOvLap;
     inOvLap.hEvent = CreateEvent(NULL, false, false, L"CYUSB_IN");
 
+    ui->lb_status->setText("Reading data");
+
     UCHAR *inContext = this->BulkInEpt->BeginDataXfer(inBuf, packet_length, &inOvLap);
     if(!this->BulkInEpt->WaitForXfer(&inOvLap, 1500))
     {
@@ -166,7 +225,7 @@ bool MainWindow::read_bulk(unsigned char *state)
         else
         {
             qDebug() << "BulkInEpt unknown error - " << this->BulkInEpt->LastError;
-            this->ui->lb_status->setText("Error");
+            ui->lb_status->setText("Error");
         }
     }
     this->BulkInEpt->FinishDataXfer(inBuf, packet_length, &inOvLap, inContext);
@@ -183,8 +242,6 @@ bool MainWindow::read_bulk(unsigned char *state)
         *state = inBuf[0];
     }
 
-    this->plot(inBuf);
-
     return status;
 }
 
@@ -194,8 +251,8 @@ void MainWindow::select_endpoints(void)
     bool ok;
     int inEpAddress = 0x0, outEpAddress = 0x0;
 
-    strINData = this->ui->cb_in_ept->currentText();
-    strOutData = this->ui->cb_out_ept->currentText();
+    strINData = ui->cb_in_ept->currentText();
+    strOutData = ui->cb_out_ept->currentText();
 
     strINData = strINData.right(4);
     strOutData = strOutData.right(4);
@@ -215,9 +272,9 @@ bool MainWindow::get_devices()
     USBDevice = new CCyUSBDevice(NULL, CYUSBDRV_GUID, true);
     QString strDevice;
     int nCboIndex = -1;
-    if (this->ui->cb_device->count() > 0 ) strDevice = this->ui->cb_device->currentText();
+    if (ui->cb_device->count() > 0 ) strDevice = ui->cb_device->currentText();
 
-    this->ui->cb_device->clear();
+    ui->cb_device->clear();
 
     if (USBDevice == NULL) return FALSE;
 
@@ -230,7 +287,7 @@ bool MainWindow::get_devices()
         strDeviceData += QString(USBDevice->FriendlyName);
         qDebug() << strDeviceData;
 
-        this->ui->cb_device->insertItem(nCount, strDeviceData);
+        ui->cb_device->insertItem(nCount, strDeviceData);
 
         if (nCboIndex == -1 && strDevice.isEmpty() == FALSE && strDevice == strDeviceData)
             nCboIndex = nCount;
@@ -238,10 +295,10 @@ bool MainWindow::get_devices()
         USBDevice->Close();
     }
     delete USBDevice;
-    if (this->ui->cb_device->count() >= 1 )
+    if (ui->cb_device->count() >= 1 )
     {
-        if (nCboIndex != -1 ) this->ui->cb_device->setCurrentIndex(nCboIndex);
-        else this->ui->cb_device->setCurrentIndex(0);
+        if (nCboIndex != -1 ) ui->cb_device->setCurrentIndex(nCboIndex);
+        else ui->cb_device->setCurrentIndex(0);
     }
 
     return TRUE;
@@ -249,10 +306,10 @@ bool MainWindow::get_devices()
 
 bool MainWindow::get_endpoint_for_device()
 {
-    int nDeviceIndex = this->ui->cb_device->currentIndex();
+    int nDeviceIndex = ui->cb_device->currentIndex();
 
-    this->ui->cb_in_ept->clear();
-    this->ui->cb_out_ept->clear();
+    ui->cb_in_ept->clear();
+    ui->cb_out_ept->clear();
 
     // Is there any FX device connected to system?
     if (nDeviceIndex == -1 || this->selectedDevice == NULL )
@@ -282,16 +339,16 @@ bool MainWindow::get_endpoint_for_device()
 
                 qDebug() << strData;
 
-                if (ept->bIn ) this->ui->cb_in_ept->addItem(strData);
-                else this->ui->cb_out_ept->addItem(strData);
+                if (ept->bIn ) ui->cb_in_ept->addItem(strData);
+                else ui->cb_out_ept->addItem(strData);
             }
         }
     }
 
-    if (this->ui->cb_in_ept->count() > 0 ) this->ui->cb_in_ept->setCurrentIndex(0);
-    if (this->ui->cb_out_ept->count() > 0 ) this->ui->cb_out_ept->setCurrentIndex(0);
+    if (ui->cb_in_ept->count() > 0 ) ui->cb_in_ept->setCurrentIndex(0);
+    if (ui->cb_out_ept->count() > 0 ) ui->cb_out_ept->setCurrentIndex(0);
 
-    return this->ui->cb_in_ept->count() > 0 && this->ui->cb_out_ept->count() > 0;
+    return ui->cb_in_ept->count() > 0 && ui->cb_out_ept->count() > 0;
 }
 
 void MainWindow::on_btn_select_clicked()
@@ -299,9 +356,8 @@ void MainWindow::on_btn_select_clicked()
     qDebug() << "on_btn_select_clicked";
 
     this->select_endpoints();
-    this->send_bulk(0);
     this->communication_enabled = true;
-    this->ui->lb_status->setText("Selected");
+    ui->lb_status->setText("Selected");
 }
 
 
@@ -336,6 +392,13 @@ void MainWindow::on_start_btn_clicked()
 {
     qDebug() << "on_start_btn_clicked";
 
-    this->send_bulk(0);
-    this->read_bulk(NULL);
+    QList<unsigned char> new_data;
+    for (int i=0; i<256; ++i)
+    {
+        new_data.append(i);
+    }
+    this->update_plot(new_data);
+
+//    this->send_bulk(0);
+//    this->read_bulk(NULL);
 }
