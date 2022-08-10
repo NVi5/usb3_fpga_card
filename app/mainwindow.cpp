@@ -230,6 +230,7 @@ bool MainWindow::read_bulk(QList<unsigned char> &rx_buf, unsigned char packets_t
     for (int i=0; i<packets_to_read; i++)
     {
         UCHAR *inContext = this->BulkInEpt->BeginDataXfer(inBuf, packet_length, &inOvLap);
+
         if(!this->BulkInEpt->WaitForXfer(&inOvLap, 1500))
         {
             status = false;
@@ -246,11 +247,15 @@ bool MainWindow::read_bulk(QList<unsigned char> &rx_buf, unsigned char packets_t
                 ui->lb_status->setText("Error");
             }
         }
+
         this->BulkInEpt->FinishDataXfer(inBuf, packet_length, &inOvLap, inContext);
 
-        for (int i=0; i<PACKET_SIZE; i++)
+        if (status)
         {
-            rx_buf.append(inBuf[i]);
+            for (int i=0; i<PACKET_SIZE; i++)
+            {
+                rx_buf.append(inBuf[i]);
+            }
         }
     }
 
