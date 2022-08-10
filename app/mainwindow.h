@@ -34,6 +34,8 @@ private slots:
 
     void yAxisChanged(const QCPRange & newRange);
 
+    void on_spinBox_valueChanged(int arg1);
+
 private:
     void init_plot();
     void update_plot(QList<unsigned char> &new_data);

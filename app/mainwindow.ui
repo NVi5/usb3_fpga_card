@@ -388,7 +388,7 @@
              </property>
             </widget>
            </item>
-           <item row="1" column="0" colspan="2">
+           <item row="2" column="0" colspan="2">
             <widget class="QPushButton" name="start_btn">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
@@ -415,7 +415,7 @@
              </property>
             </widget>
            </item>
-           <item row="2" column="0" colspan="2">
+           <item row="3" column="0" colspan="2">
             <widget class="QPushButton" name="pushButton_5">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
@@ -439,6 +439,20 @@
              </property>
              <property name="text">
               <string>Exit</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="label_21">
+             <property name="text">
+              <string>Time window</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLabel" name="time_label">
+             <property name="text">
+              <string>0ms</string>
              </property>
             </widget>
            </item>

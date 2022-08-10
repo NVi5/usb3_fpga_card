@@ -28,6 +28,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         child->setCurrentIndex(counter++);
     }
 
+    ui->time_label->setText(QString("%1ms").arg(ui->spinBox->value()*0.32768));
+
     this->init_plot();
 }
 
@@ -423,3 +425,9 @@ void MainWindow::on_start_btn_clicked()
 
     this->update_plot(this->data_buffer);
 }
+
+void MainWindow::on_spinBox_valueChanged(int arg1)
+{
+    ui->time_label->setText(QString("%1ms").arg(arg1*0.32768));
+}
+
