@@ -81,6 +81,7 @@ void MainWindow::init_plot()
 
         ui->qplot->graph()->setData(x, y, TRUE);
         ui->qplot->graph()->rescaleAxes(true);
+        ui->qplot->graph()->setAdaptiveSampling(TRUE);
     }
 
     // zoom out a bit
@@ -418,7 +419,7 @@ void MainWindow::on_start_btn_clicked()
     }
 
     qDebug() << "send_bulk: " << this->send_bulk(new_data);
-    qDebug() << "read_bulk: " << this->read_bulk(this->data_buffer, 2);
+    qDebug() << "read_bulk: " << this->read_bulk(this->data_buffer, ui->spinBox->value());
 
     this->update_plot(this->data_buffer);
 }

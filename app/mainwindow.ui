@@ -360,7 +360,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QGroupBox" name="">
+         <widget class="QGroupBox" name="groupBox_3">
           <property name="title">
            <string>Control</string>
           </property>
@@ -368,20 +368,23 @@
            <item row="0" column="0">
             <widget class="QLabel" name="label_12">
              <property name="text">
-              <string>Samples</string>
+              <string>Packets</string>
              </property>
             </widget>
            </item>
            <item row="0" column="1">
             <widget class="QSpinBox" name="spinBox">
              <property name="minimum">
-              <number>1024</number>
+              <number>1</number>
              </property>
              <property name="maximum">
-              <number>131072</number>
+              <number>16</number>
              </property>
              <property name="singleStep">
-              <number>1024</number>
+              <number>1</number>
+             </property>
+             <property name="value">
+              <number>1</number>
              </property>
             </widget>
            </item>
