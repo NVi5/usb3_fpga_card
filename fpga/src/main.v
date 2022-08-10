@@ -22,8 +22,6 @@ module main (
     output        CLK_OUT  // output clk 100 Mhz and 180 phase shift
 );
 
-    reg [3:0] pb_old_state;
-
     reg [1:0] oe_delay_cnt;
     reg rd_oe_delay_cnt;
     wire [31:0] fifo_data_in;
@@ -173,14 +171,11 @@ module main (
     always @(posedge clk_pll, negedge reset_) begin
         if (!reset_) begin
             transfer_ctr <= 0;
-            USER_LED[3:0] <= 4'b1111;
-            pb_old_state[3:0] <= 4'b1111;
         end else begin
-            pb_old_state <= PB;
             if (transfer_ctr > 0) begin
-                if (current_sm_state == sm_wait_flaga)
+                if (current_sm_state == sm_write_wr_delay)
                     transfer_ctr <= transfer_ctr - 1;
-            end else if (pb_old_state != PB) begin
+            end else if ((SLRD_loopback_d3_ == 1'b0) && (SLRD_loopback_d4_ == 1'b1)) begin
                 transfer_ctr <= 2;
             end
         end

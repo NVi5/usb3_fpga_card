@@ -418,7 +418,7 @@ void MainWindow::on_start_btn_clicked()
     }
 
     qDebug() << "send_bulk: " << this->send_bulk(new_data);
-    qDebug() << "read_bulk: " << this->read_bulk(this->data_buffer, 1);
+    qDebug() << "read_bulk: " << this->read_bulk(this->data_buffer, 2);
 
     this->update_plot(this->data_buffer);
 }
