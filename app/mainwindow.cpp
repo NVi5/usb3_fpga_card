@@ -68,14 +68,14 @@ void MainWindow::init_plot()
     {
         ui->qplot->addGraph();
         pen.setColor(colorList.at(i));
-        pen.setWidthF(2);
+        pen.setWidthF(1);
         ui->qplot->graph()->setPen(pen);
         ui->qplot->graph()->setName(lineNames.at(i));
         ui->qplot->graph()->setLineStyle(QCPGraph::lsStepLeft);
 
         QVector<double> x(2), y(2);
         x[0] = 0;
-        x[1] = 1024;
+        x[1] = 5;
         y[0] = (7-i)*2.5;
         y[1] = y[0];
 
@@ -135,11 +135,11 @@ void MainWindow::update_plot(QList<unsigned char> &new_data)
     delete x_vect;
     delete y_vect;
 
-    ui->qplot->rescaleAxes(false);
-    ui->qplot->yAxis->scaleRange(1.1, ui->qplot->yAxis->range().center());
+    ui->qplot->setProperty("xmin", 0);
+    ui->qplot->setProperty("xmax", new_data.size());
 
-    ui->qplot->setProperty("xmin", ui->qplot->xAxis->range().lower);
-    ui->qplot->setProperty("xmax", ui->qplot->xAxis->range().upper);
+    ui->qplot->rescaleAxes();
+    ui->qplot->yAxis->scaleRange(1.1, ui->qplot->yAxis->range().center());
 
     ui->qplot->replot();
 
@@ -250,6 +250,8 @@ bool MainWindow::read_bulk(QList<unsigned char> &rx_buf, unsigned char packets_t
             rx_buf.append(inBuf[i]);
         }
     }
+
+    qDebug() << "read_bulk Received data: " << rx_buf.size();
 
     CloseHandle(inOvLap.hEvent);
 
