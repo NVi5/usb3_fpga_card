@@ -25,7 +25,10 @@ module main (
     reg [1:0] oe_delay_cnt;
     reg rd_oe_delay_cnt;
     wire [31:0] fifo_data_in;
-    reg [31:0] data_gen;
+    reg [7:0] data_gen_0;
+    reg [7:0] data_gen_1;
+    reg [7:0] data_gen_2;
+    reg [7:0] data_gen_3;
 
     wire [31:0] data_out;
     reg [31:0] DQ_d;
@@ -290,15 +293,21 @@ module main (
     reg [31:0] data_out_loopback_d;
     always @(posedge clk_pll) begin
         // data_out_loopback_d <= {28'h0, ~USER_LED[3:0]};
-        data_out_loopback_d <= data_gen;
+        data_out_loopback_d <= {data_gen_0, data_gen_1, data_gen_2, data_gen_3};
     end
 
     // data generator counter
     always @(posedge clk_pll, negedge reset_)begin
         if(!reset_)begin
-            data_gen <= 32'd0;
+            data_gen_0 <= 8'd0;
+            data_gen_1 <= 8'd1;
+            data_gen_2 <= 8'd2;
+            data_gen_3 <= 8'd3;
         end else begin
-            data_gen <= data_gen + 1;
+            data_gen_0 <= data_gen_0 + 4;
+            data_gen_1 <= data_gen_1 + 4;
+            data_gen_2 <= data_gen_2 + 4;
+            data_gen_3 <= data_gen_3 + 4;
         end
     end
 
