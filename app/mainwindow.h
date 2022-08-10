@@ -38,8 +38,8 @@ private:
     void init_plot();
     void update_plot(QList<unsigned char> &new_data);
     void limitAxisRange(QCPAxis * axis, const QCPRange & newRange, const QCPRange & limitRange);
-    void send_bulk(unsigned char state);
-    bool read_bulk(unsigned char *state);
+    bool send_bulk(QList<unsigned char> &tx_buf);
+    bool read_bulk(QList<unsigned char> &rx_buf, unsigned char packets_to_read);
     void select_endpoints(void);
     bool get_devices();
     bool get_endpoint_for_device();
@@ -50,5 +50,6 @@ private:
     CCyUSBDevice *selectedDevice;
     CCyUSBEndPoint *BulkInEpt;
     CCyUSBEndPoint *BulkOutEpt;
+    QList<unsigned char> data_buffer;
 };
 #endif // MAINWINDOW_H

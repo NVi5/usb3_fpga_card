@@ -5,11 +5,14 @@
 #include <QColor>
 #include "Windows.h"
 
+#define PACKET_SIZE (16*1024)
+
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow), BulkInEpt(NULL), BulkOutEpt(NULL)
 {
     this->selectedDevice = new CCyUSBDevice(NULL, CYUSBDRV_GUID, true);
     this->ui->setupUi(this);
     this->communication_enabled = false;
+    this->data_buffer.clear();
 
     this->get_devices();
     this->get_endpoint_for_device();
@@ -31,6 +34,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 MainWindow::~MainWindow()
 {
     this->communication_enabled = false;
+    this->data_buffer.clear();
     delete ui;
     if (this->selectedDevice)
     {
@@ -185,24 +189,33 @@ void MainWindow::limitAxisRange(QCPAxis * axis, const QCPRange & newRange, const
     }
 }
 
-void MainWindow::send_bulk(unsigned char state)
+bool MainWindow::send_bulk(QList<unsigned char> &tx_buf)
 {
     Q_ASSERT(this->BulkOutEpt);
-    if (!this->communication_enabled) return;
+    if (!this->communication_enabled || tx_buf.size() > PACKET_SIZE) return FALSE;
 
-    LONG packet_length = 64;
-    UCHAR buf[64] = {state, 0xFF, 0};
-    BOOL status = this->BulkOutEpt->XferData(buf, packet_length);
+    LONG packet_length = PACKET_SIZE;
+    UCHAR outBuf[PACKET_SIZE];
 
-    qDebug() << "Sent: " << state << "Result: " << status;
+    for (int i=0; i<tx_buf.size(); i++)
+    {
+        outBuf[i] = tx_buf.at(i);
+    }
+
+    BOOL status = this->BulkOutEpt->XferData(outBuf, packet_length);
+
+    qDebug() << "Sent: " << tx_buf << "Result: " << status;
+
+    return status;
 }
 
-bool MainWindow::read_bulk(unsigned char *state)
+bool MainWindow::read_bulk(QList<unsigned char> &rx_buf, unsigned char packets_to_read)
 {
     Q_ASSERT(this->BulkInEpt);
     bool status = true;
-    UCHAR inBuf[16*1024];
-    LONG packet_length = 16*1024;
+    UCHAR inBuf[PACKET_SIZE];
+    LONG packet_length = PACKET_SIZE;
+    rx_buf.clear();
 
     if (!this->communication_enabled) return FALSE;
 
@@ -211,36 +224,34 @@ bool MainWindow::read_bulk(unsigned char *state)
 
     ui->lb_status->setText("Reading data");
 
-    UCHAR *inContext = this->BulkInEpt->BeginDataXfer(inBuf, packet_length, &inOvLap);
-    if(!this->BulkInEpt->WaitForXfer(&inOvLap, 1500))
+    for (int i=0; i<packets_to_read; i++)
     {
-        status = false;
+        UCHAR *inContext = this->BulkInEpt->BeginDataXfer(inBuf, packet_length, &inOvLap);
+        if(!this->BulkInEpt->WaitForXfer(&inOvLap, 1500))
+        {
+            status = false;
 
-        this->BulkInEpt->Abort();
-        if (this->BulkInEpt->LastError == ERROR_IO_PENDING)
-        {
-            qDebug() << "BulkInEpt ERROR_IO_PENDING";
-            WaitForSingleObject(inOvLap.hEvent, 1500);
+            this->BulkInEpt->Abort();
+            if (this->BulkInEpt->LastError == ERROR_IO_PENDING)
+            {
+                qDebug() << "BulkInEpt ERROR_IO_PENDING";
+                WaitForSingleObject(inOvLap.hEvent, 1500);
+            }
+            else
+            {
+                qDebug() << "BulkInEpt unknown error - " << this->BulkInEpt->LastError;
+                ui->lb_status->setText("Error");
+            }
         }
-        else
+        this->BulkInEpt->FinishDataXfer(inBuf, packet_length, &inOvLap, inContext);
+
+        for (int i=0; i<PACKET_SIZE; i++)
         {
-            qDebug() << "BulkInEpt unknown error - " << this->BulkInEpt->LastError;
-            ui->lb_status->setText("Error");
+            rx_buf.append(inBuf[i]);
         }
     }
-    this->BulkInEpt->FinishDataXfer(inBuf, packet_length, &inOvLap, inContext);
 
     CloseHandle(inOvLap.hEvent);
-
-    if(status)
-    {
-        qDebug("Received - %d", inBuf[0]);
-    }
-
-    if (state)
-    {
-        *state = inBuf[0];
-    }
 
     return status;
 }
@@ -262,8 +273,8 @@ void MainWindow::select_endpoints(void)
     outEpAddress = strOutData.toInt(&ok, 16);
     Q_ASSERT(ok);
 
-    BulkOutEpt = this->selectedDevice->EndPointOf(outEpAddress);
-    BulkInEpt = this->selectedDevice->EndPointOf(inEpAddress);
+    this->BulkOutEpt = this->selectedDevice->EndPointOf(outEpAddress);
+    this->BulkInEpt = this->selectedDevice->EndPointOf(inEpAddress);
 }
 
 bool MainWindow::get_devices()
@@ -356,8 +367,12 @@ void MainWindow::on_btn_select_clicked()
     qDebug() << "on_btn_select_clicked";
 
     this->select_endpoints();
-    this->communication_enabled = true;
-    ui->lb_status->setText("Selected");
+
+    if (this->BulkOutEpt && this->BulkInEpt)
+    {
+        this->communication_enabled = true;
+        ui->lb_status->setText("Selected");
+    }
 }
 
 
@@ -392,13 +407,16 @@ void MainWindow::on_start_btn_clicked()
 {
     qDebug() << "on_start_btn_clicked";
 
+    if (!this->communication_enabled) return;
+
     QList<unsigned char> new_data;
     for (int i=0; i<256; ++i)
     {
         new_data.append(i);
     }
-    this->update_plot(new_data);
 
-//    this->send_bulk(0);
-//    this->read_bulk(NULL);
+    qDebug() << "send_bulk: " << this->send_bulk(new_data);
+    qDebug() << "read_bulk: " << this->read_bulk(this->data_buffer, 1);
+
+    this->update_plot(this->data_buffer);
 }
