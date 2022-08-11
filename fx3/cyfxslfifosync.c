@@ -273,13 +273,17 @@ CyFxSlFifoApplnStart (
         CyFxAppErrorHandler (apiRetStatus);
     }
 
-    /* Create a DMA MANUAL channel for U2P transfer.
+    /* Create a DMA channel for U2P transfer.
      * DMA size is set based on the USB speed. */
     dmaCfg.size  = DMA_BUF_SIZE * size;
     dmaCfg.count = CY_FX_SLFIFO_DMA_BUF_COUNT_U_2_P;
     dmaCfg.dmaMode = CY_U3P_DMA_MODE_BYTE;
     /* Enabling the callback for produce event. */
+#ifdef AUTO
+    dmaCfg.notification = 0;
+#else
     dmaCfg.notification = CY_U3P_DMA_CB_PROD_EVENT;
+#endif
     dmaCfg.prodHeader = 0;
     dmaCfg.prodFooter = 0;
     dmaCfg.consHeader = 0;
@@ -287,9 +291,13 @@ CyFxSlFifoApplnStart (
 
     dmaCfg.prodSckId = CY_FX_PRODUCER_USB_SOCKET;
     dmaCfg.consSckId = CY_FX_CONSUMER_PPORT_SOCKET;
+#ifdef AUTO
+    dmaCfg.cb = NULL;
+    apiRetStatus = CyU3PDmaChannelCreate (&glChHandleSlFifoUtoP, CY_U3P_DMA_TYPE_AUTO, &dmaCfg);
+#else
     dmaCfg.cb = CyFxSlFifoUtoPDmaCallback;
-    apiRetStatus = CyU3PDmaChannelCreate (&glChHandleSlFifoUtoP,
-            CY_U3P_DMA_TYPE_MANUAL, &dmaCfg);
+    apiRetStatus = CyU3PDmaChannelCreate (&glChHandleSlFifoUtoP, CY_U3P_DMA_TYPE_MANUAL, &dmaCfg);
+#endif
     if (apiRetStatus != CY_U3P_SUCCESS)
     {
         CyU3PDebugPrint (4, "CyU3PDmaChannelCreate failed, Error code = %d\n", apiRetStatus);
@@ -300,9 +308,13 @@ CyFxSlFifoApplnStart (
     dmaCfg.count = CY_FX_SLFIFO_DMA_BUF_COUNT_P_2_U;
     dmaCfg.prodSckId = CY_FX_PRODUCER_PPORT_SOCKET;
     dmaCfg.consSckId = CY_FX_CONSUMER_USB_SOCKET;
+#ifdef AUTO
+    dmaCfg.cb = NULL;
+    apiRetStatus = CyU3PDmaChannelCreate (&glChHandleSlFifoPtoU, CY_U3P_DMA_TYPE_AUTO, &dmaCfg);
+#else
     dmaCfg.cb = CyFxSlFifoPtoUDmaCallback;
-    apiRetStatus = CyU3PDmaChannelCreate (&glChHandleSlFifoPtoU,
-            CY_U3P_DMA_TYPE_MANUAL, &dmaCfg);
+    apiRetStatus = CyU3PDmaChannelCreate (&glChHandleSlFifoPtoU, CY_U3P_DMA_TYPE_MANUAL, &dmaCfg);
+#endif
     if (apiRetStatus != CY_U3P_SUCCESS)
     {
         CyU3PDebugPrint (4, "CyU3PDmaChannelCreate failed, Error code = %d\n", apiRetStatus);
@@ -714,14 +726,19 @@ SlFifoAppThread_Entry (
     /* Initialize the slave FIFO application */
     CyFxSlFifoApplnInit();
 
+    uint32_t watchdog = 0;
+
     for (;;)
     {
         CyU3PThreadSleep (1000);
         if (glIsApplnActive)
         {
+#ifndef AUTO
             /* Print the number of buffers received so far from the USB host. */
             CyU3PDebugPrint (6, "Data tracker: buffers received: %d, buffers sent: %d.\n",
                     glDMARxCount, glDMATxCount);
+#endif
+            CyU3PDebugPrint (6, "SlFifoAppThread_Entry: Watchdog %ds.\n", watchdog++);
         }
     }
 }

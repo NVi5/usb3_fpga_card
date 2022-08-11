@@ -29,6 +29,8 @@
 #include "cyu3types.h"
 #include "cyu3usbconst.h"
 
+#define AUTO
+
 /* 16/32 bit GPIF Configuration select */
 /* Set CY_FX_SLFIFO_GPIF_16_32BIT_CONF_SELECT = 0 for 16 bit GPIF data bus.
  * Set CY_FX_SLFIFO_GPIF_16_32BIT_CONF_SELECT = 1 for 32 bit GPIF data bus.
@@ -42,8 +44,8 @@
 /* Slave FIFO U_2_P channel buffer count */
 #define CY_FX_SLFIFO_DMA_BUF_COUNT_U_2_P      (2)
 
-#define CY_FX_SLFIFO_DMA_TX_SIZE        (0)	                  /* DMA transfer size is set to infinite */
-#define CY_FX_SLFIFO_DMA_RX_SIZE        (0)	                  /* DMA transfer size is set to infinite */
+#define CY_FX_SLFIFO_DMA_TX_SIZE        (0)                       /* DMA transfer size is set to infinite */
+#define CY_FX_SLFIFO_DMA_RX_SIZE        (0)                       /* DMA transfer size is set to infinite */
 #define CY_FX_SLFIFO_THREAD_STACK       (0x0400)                  /* Slave FIFO application thread stack size */
 #define CY_FX_SLFIFO_THREAD_PRIORITY    (8)                       /* Slave FIFO application thread priority */
 
