@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <QColor>
 #include "Windows.h"
+
 #define PACKET_SIZE (16*1024)
 #define RX_PACKETS_PER_TRANSFER 2
 #define RX_TRANSFER_SIZE (PACKET_SIZE*RX_PACKETS_PER_TRANSFER)

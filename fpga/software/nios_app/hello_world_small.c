@@ -86,13 +86,16 @@
 
 int main()
 {
-    unsigned int datain;
+    unsigned char new_state, old_state = 0;
     alt_putstr("Hello from Nios II!\n");
 
-    /* Event loop never exits. Read the PB, display on the LED */
     while (1) {
-        datain = IORD_ALTERA_AVALON_PIO_DATA(DATA_PIO_BASE);
-        printf("%x \n",datain);
+    	new_state = IORD_ALTERA_AVALON_PIO_DATA(STATE_IO_BASE);
+    	if (new_state == 8 && old_state != 8)
+    	{
+            printf("%d\n", IORD_ALTERA_AVALON_PIO_DATA(DATA_IO_BASE));
+    	}
+        old_state = new_state;
     }
     return 0;
 }

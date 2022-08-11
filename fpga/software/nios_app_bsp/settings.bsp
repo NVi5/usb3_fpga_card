@@ -2,8 +2,8 @@
 <sch:Settings xmlns:sch="http://www.altera.com/embeddedsw/bsp/schema">
         <BspType>hal</BspType>
         <BspVersion>default</BspVersion>
-        <BspGeneratedTimeStamp>Jun 29, 2022 3:00:51 AM</BspGeneratedTimeStamp>
-        <BspGeneratedUnixTimeStamp>1656464451321</BspGeneratedUnixTimeStamp>
+        <BspGeneratedTimeStamp>Aug 12, 2022 12:58:17 AM</BspGeneratedTimeStamp>
+        <BspGeneratedUnixTimeStamp>1660258698024</BspGeneratedUnixTimeStamp>
         <BspGeneratedLocation>C:\Users\nvade\OneDrive\Dokumenty\Workspace\usb3_fpga_card\fpga\software\nios_app_bsp</BspGeneratedLocation>
         <BspSettingsFile>settings.bsp</BspSettingsFile>
         <SopcDesignFile>C:\Users\nvade\OneDrive\Dokumenty\Workspace\usb3_fpga_card\fpga\nios.sopcinfo</SopcDesignFile>
@@ -905,7 +905,7 @@
                 <attributes>memory</attributes>
         </MemoryMap>
         <MemoryMap>
-                <slaveDescriptor>data_pio</slaveDescriptor>
+                <slaveDescriptor>data_io</slaveDescriptor>
                 <addressRange>0x00009000 - 0x0000900F</addressRange>
                 <addressSpan>16</addressSpan>
                 <attributes/>
@@ -915,6 +915,12 @@
                 <addressRange>0x00009010 - 0x00009017</addressRange>
                 <addressSpan>8</addressSpan>
                 <attributes>printable</attributes>
+        </MemoryMap>
+        <MemoryMap>
+                <slaveDescriptor>state_io</slaveDescriptor>
+                <addressRange>0x00009020 - 0x0000902F</addressRange>
+                <addressSpan>16</addressSpan>
+                <attributes/>
         </MemoryMap>
         <LinkerSection>
                 <sectionName>.text</sectionName>

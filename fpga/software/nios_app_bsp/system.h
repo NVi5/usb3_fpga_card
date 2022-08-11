@@ -4,7 +4,7 @@
  * Machine generated for CPU 'nios2e' in SOPC Builder design 'nios'
  * SOPC Builder design path: C:/Users/nvade/OneDrive/Dokumenty/Workspace/usb3_fpga_card/fpga/nios.sopcinfo
  *
- * Generated: Wed Jun 29 03:00:51 CEST 2022
+ * Generated: Fri Aug 12 00:58:18 CEST 2022
  */
 
 /*
@@ -176,30 +176,30 @@
 
 
 /*
- * data_pio configuration
+ * data_io configuration
  *
  */
 
-#define ALT_MODULE_CLASS_data_pio altera_avalon_pio
-#define DATA_PIO_BASE 0x9000
-#define DATA_PIO_BIT_CLEARING_EDGE_REGISTER 0
-#define DATA_PIO_BIT_MODIFYING_OUTPUT_REGISTER 0
-#define DATA_PIO_CAPTURE 0
-#define DATA_PIO_DATA_WIDTH 32
-#define DATA_PIO_DO_TEST_BENCH_WIRING 0
-#define DATA_PIO_DRIVEN_SIM_VALUE 0
-#define DATA_PIO_EDGE_TYPE "NONE"
-#define DATA_PIO_FREQ 100000000
-#define DATA_PIO_HAS_IN 1
-#define DATA_PIO_HAS_OUT 0
-#define DATA_PIO_HAS_TRI 0
-#define DATA_PIO_IRQ -1
-#define DATA_PIO_IRQ_INTERRUPT_CONTROLLER_ID -1
-#define DATA_PIO_IRQ_TYPE "NONE"
-#define DATA_PIO_NAME "/dev/data_pio"
-#define DATA_PIO_RESET_VALUE 0
-#define DATA_PIO_SPAN 16
-#define DATA_PIO_TYPE "altera_avalon_pio"
+#define ALT_MODULE_CLASS_data_io altera_avalon_pio
+#define DATA_IO_BASE 0x9000
+#define DATA_IO_BIT_CLEARING_EDGE_REGISTER 0
+#define DATA_IO_BIT_MODIFYING_OUTPUT_REGISTER 0
+#define DATA_IO_CAPTURE 0
+#define DATA_IO_DATA_WIDTH 32
+#define DATA_IO_DO_TEST_BENCH_WIRING 0
+#define DATA_IO_DRIVEN_SIM_VALUE 0
+#define DATA_IO_EDGE_TYPE "NONE"
+#define DATA_IO_FREQ 100000000
+#define DATA_IO_HAS_IN 1
+#define DATA_IO_HAS_OUT 0
+#define DATA_IO_HAS_TRI 0
+#define DATA_IO_IRQ -1
+#define DATA_IO_IRQ_INTERRUPT_CONTROLLER_ID -1
+#define DATA_IO_IRQ_TYPE "NONE"
+#define DATA_IO_NAME "/dev/data_io"
+#define DATA_IO_RESET_VALUE 0
+#define DATA_IO_SPAN 16
+#define DATA_IO_TYPE "altera_avalon_pio"
 
 
 /*
@@ -258,5 +258,32 @@
 #define ONCHIP_MEMORY_SPAN 16384
 #define ONCHIP_MEMORY_TYPE "altera_avalon_onchip_memory2"
 #define ONCHIP_MEMORY_WRITABLE 1
+
+
+/*
+ * state_io configuration
+ *
+ */
+
+#define ALT_MODULE_CLASS_state_io altera_avalon_pio
+#define STATE_IO_BASE 0x9020
+#define STATE_IO_BIT_CLEARING_EDGE_REGISTER 0
+#define STATE_IO_BIT_MODIFYING_OUTPUT_REGISTER 0
+#define STATE_IO_CAPTURE 0
+#define STATE_IO_DATA_WIDTH 4
+#define STATE_IO_DO_TEST_BENCH_WIRING 0
+#define STATE_IO_DRIVEN_SIM_VALUE 0
+#define STATE_IO_EDGE_TYPE "NONE"
+#define STATE_IO_FREQ 100000000
+#define STATE_IO_HAS_IN 1
+#define STATE_IO_HAS_OUT 0
+#define STATE_IO_HAS_TRI 0
+#define STATE_IO_IRQ -1
+#define STATE_IO_IRQ_INTERRUPT_CONTROLLER_ID -1
+#define STATE_IO_IRQ_TYPE "NONE"
+#define STATE_IO_NAME "/dev/state_io"
+#define STATE_IO_RESET_VALUE 0
+#define STATE_IO_SPAN 16
+#define STATE_IO_TYPE "altera_avalon_pio"
 
 #endif /* __SYSTEM_H_ */

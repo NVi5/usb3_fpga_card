@@ -4,9 +4,10 @@
 
 `timescale 1 ps / 1 ps
 module nios (
-		input  wire        clk_clk,        //     clk.clk
-		input  wire [31:0] data_in_export, // data_in.export
-		input  wire        reset_reset_n   //   reset.reset_n
+		input  wire        clk_clk,         //      clk.clk
+		input  wire [31:0] data_in_export,  //  data_in.export
+		input  wire        reset_reset_n,   //    reset.reset_n
+		input  wire [3:0]  state_in_export  // state_in.export
 	);
 
 	wire  [31:0] nios2e_data_master_readdata;                               // mm_interconnect_0:nios2e_data_master_readdata -> nios2e:d_readdata
@@ -43,19 +44,21 @@ module nios (
 	wire         mm_interconnect_0_onchip_memory_s1_write;                  // mm_interconnect_0:onchip_memory_s1_write -> onchip_memory:write
 	wire  [31:0] mm_interconnect_0_onchip_memory_s1_writedata;              // mm_interconnect_0:onchip_memory_s1_writedata -> onchip_memory:writedata
 	wire         mm_interconnect_0_onchip_memory_s1_clken;                  // mm_interconnect_0:onchip_memory_s1_clken -> onchip_memory:clken
-	wire  [31:0] mm_interconnect_0_data_pio_s1_readdata;                    // data_pio:readdata -> mm_interconnect_0:data_pio_s1_readdata
-	wire   [1:0] mm_interconnect_0_data_pio_s1_address;                     // mm_interconnect_0:data_pio_s1_address -> data_pio:address
+	wire  [31:0] mm_interconnect_0_data_io_s1_readdata;                     // data_io:readdata -> mm_interconnect_0:data_io_s1_readdata
+	wire   [1:0] mm_interconnect_0_data_io_s1_address;                      // mm_interconnect_0:data_io_s1_address -> data_io:address
+	wire  [31:0] mm_interconnect_0_state_io_s1_readdata;                    // state_io:readdata -> mm_interconnect_0:state_io_s1_readdata
+	wire   [1:0] mm_interconnect_0_state_io_s1_address;                     // mm_interconnect_0:state_io_s1_address -> state_io:address
 	wire         irq_mapper_receiver0_irq;                                  // jtag_uart:av_irq -> irq_mapper:receiver0_irq
 	wire  [31:0] nios2e_irq_irq;                                            // irq_mapper:sender_irq -> nios2e:irq
-	wire         rst_controller_reset_out_reset;                            // rst_controller:reset_out -> [data_pio:reset_n, irq_mapper:reset, jtag_uart:rst_n, mm_interconnect_0:nios2e_reset_reset_bridge_in_reset_reset, nios2e:reset_n, onchip_memory:reset, rst_translator:in_reset]
+	wire         rst_controller_reset_out_reset;                            // rst_controller:reset_out -> [data_io:reset_n, irq_mapper:reset, jtag_uart:rst_n, mm_interconnect_0:nios2e_reset_reset_bridge_in_reset_reset, nios2e:reset_n, onchip_memory:reset, rst_translator:in_reset, state_io:reset_n]
 	wire         rst_controller_reset_out_reset_req;                        // rst_controller:reset_req -> [nios2e:reset_req, onchip_memory:reset_req, rst_translator:reset_req_in]
 
-	nios_data_pio data_pio (
-		.clk      (clk_clk),                                //                 clk.clk
-		.reset_n  (~rst_controller_reset_out_reset),        //               reset.reset_n
-		.address  (mm_interconnect_0_data_pio_s1_address),  //                  s1.address
-		.readdata (mm_interconnect_0_data_pio_s1_readdata), //                    .readdata
-		.in_port  (data_in_export)                          // external_connection.export
+	nios_data_io data_io (
+		.clk      (clk_clk),                               //                 clk.clk
+		.reset_n  (~rst_controller_reset_out_reset),       //               reset.reset_n
+		.address  (mm_interconnect_0_data_io_s1_address),  //                  s1.address
+		.readdata (mm_interconnect_0_data_io_s1_readdata), //                    .readdata
+		.in_port  (data_in_export)                         // external_connection.export
 	);
 
 	nios_jtag_uart jtag_uart (
@@ -114,6 +117,14 @@ module nios (
 		.freeze     (1'b0)                                           // (terminated)
 	);
 
+	nios_state_io state_io (
+		.clk      (clk_clk),                                //                 clk.clk
+		.reset_n  (~rst_controller_reset_out_reset),        //               reset.reset_n
+		.address  (mm_interconnect_0_state_io_s1_address),  //                  s1.address
+		.readdata (mm_interconnect_0_state_io_s1_readdata), //                    .readdata
+		.in_port  (state_in_export)                         // external_connection.export
+	);
+
 	nios_mm_interconnect_0 mm_interconnect_0 (
 		.clk_0_clk_clk                            (clk_clk),                                                   //                          clk_0_clk.clk
 		.nios2e_reset_reset_bridge_in_reset_reset (rst_controller_reset_out_reset),                            // nios2e_reset_reset_bridge_in_reset.reset
@@ -129,8 +140,8 @@ module nios (
 		.nios2e_instruction_master_waitrequest    (nios2e_instruction_master_waitrequest),                     //                                   .waitrequest
 		.nios2e_instruction_master_read           (nios2e_instruction_master_read),                            //                                   .read
 		.nios2e_instruction_master_readdata       (nios2e_instruction_master_readdata),                        //                                   .readdata
-		.data_pio_s1_address                      (mm_interconnect_0_data_pio_s1_address),                     //                        data_pio_s1.address
-		.data_pio_s1_readdata                     (mm_interconnect_0_data_pio_s1_readdata),                    //                                   .readdata
+		.data_io_s1_address                       (mm_interconnect_0_data_io_s1_address),                      //                         data_io_s1.address
+		.data_io_s1_readdata                      (mm_interconnect_0_data_io_s1_readdata),                     //                                   .readdata
 		.jtag_uart_avalon_jtag_slave_address      (mm_interconnect_0_jtag_uart_avalon_jtag_slave_address),     //        jtag_uart_avalon_jtag_slave.address
 		.jtag_uart_avalon_jtag_slave_write        (mm_interconnect_0_jtag_uart_avalon_jtag_slave_write),       //                                   .write
 		.jtag_uart_avalon_jtag_slave_read         (mm_interconnect_0_jtag_uart_avalon_jtag_slave_read),        //                                   .read
@@ -152,7 +163,9 @@ module nios (
 		.onchip_memory_s1_writedata               (mm_interconnect_0_onchip_memory_s1_writedata),              //                                   .writedata
 		.onchip_memory_s1_byteenable              (mm_interconnect_0_onchip_memory_s1_byteenable),             //                                   .byteenable
 		.onchip_memory_s1_chipselect              (mm_interconnect_0_onchip_memory_s1_chipselect),             //                                   .chipselect
-		.onchip_memory_s1_clken                   (mm_interconnect_0_onchip_memory_s1_clken)                   //                                   .clken
+		.onchip_memory_s1_clken                   (mm_interconnect_0_onchip_memory_s1_clken),                  //                                   .clken
+		.state_io_s1_address                      (mm_interconnect_0_state_io_s1_address),                     //                        state_io_s1.address
+		.state_io_s1_readdata                     (mm_interconnect_0_state_io_s1_readdata)                     //                                   .readdata
 	);
 
 	nios_irq_mapper irq_mapper (

@@ -29,6 +29,7 @@ module main (
     reg [7:0] data_gen_1;
     reg [7:0] data_gen_2;
     reg [7:0] data_gen_3;
+    reg [31:0] wait_ctr;
 
     wire [31:0] data_out;
     reg [31:0] DQ_d;
@@ -87,6 +88,13 @@ module main (
         .datain_l(1'b1),
         .outclock(clk_pll),
         .dataout (CLK_OUT)
+    );
+
+    nios u0 (
+        .clk_clk         (clk_pll),
+        .reset_reset_n   (reset_),
+        .state_in_export (current_sm_state),
+        .data_in_export  (wait_ctr)
     );
 
     // flopping the INPUTs flags
@@ -179,7 +187,7 @@ module main (
                 if (current_sm_state == sm_write_wr_delay)
                     transfer_ctr <= transfer_ctr - 1;
             end else if ((SLRD_loopback_d3_ == 1'b0) && (SLRD_loopback_d4_ == 1'b1)) begin
-                transfer_ctr <= 2;
+                transfer_ctr <= 16;
             end
         end
     end
@@ -207,6 +215,17 @@ module main (
             oe_delay_cnt <= oe_delay_cnt - 1'b1;
         end else begin
             oe_delay_cnt <= oe_delay_cnt;
+        end
+    end
+
+    // Wait counter
+    always @(posedge clk_pll, negedge reset_) begin
+        if (!reset_) begin
+            wait_ctr <= 0;
+        end else if (current_sm_state == sm_idle) begin
+            wait_ctr <= 0;
+        end else if (current_sm_state == sm_wait_flagb || current_sm_state == sm_wait_flaga) begin
+            wait_ctr <= wait_ctr + 1;
         end
     end
 
