@@ -88,6 +88,7 @@ CyFxAppErrorHandler (
     /* Application failed with the error code apiRetStatus */
 
     /* Add custom debug or recovery actions here */
+    CyU3PDebugPrint (8, "CyFxAppErrorHandler, Error detected = %d\n", apiRetStatus);
 
     /* Loop Indefinitely */
     for (;;)
