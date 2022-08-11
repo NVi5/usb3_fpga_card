@@ -4,8 +4,11 @@
 #include <QDebug>
 #include <QColor>
 #include "Windows.h"
-
 #define PACKET_SIZE (16*1024)
+#define RX_PACKETS_PER_TRANSFER 2
+#define RX_TRANSFER_SIZE (PACKET_SIZE*RX_PACKETS_PER_TRANSFER)
+#define TX_PACKETS_PER_TRANSFER 1
+#define TX_TRANSFER_SIZE (PACKET_SIZE*TX_PACKETS_PER_TRANSFER)
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow), BulkInEpt(NULL), BulkOutEpt(NULL)
 {
@@ -195,10 +198,10 @@ void MainWindow::limitAxisRange(QCPAxis * axis, const QCPRange & newRange, const
 bool MainWindow::send_bulk(QList<unsigned char> &tx_buf)
 {
     Q_ASSERT(this->BulkOutEpt);
-    if (!this->communication_enabled || tx_buf.size() > PACKET_SIZE) return FALSE;
+    if (!this->communication_enabled || tx_buf.size() > TX_TRANSFER_SIZE) return FALSE;
 
-    LONG packet_length = PACKET_SIZE;
-    UCHAR outBuf[PACKET_SIZE];
+    LONG packet_length = TX_TRANSFER_SIZE;
+    UCHAR outBuf[TX_TRANSFER_SIZE];
 
     for (int i=0; i<tx_buf.size(); i++)
     {
@@ -216,8 +219,8 @@ bool MainWindow::read_bulk(QList<unsigned char> &rx_buf, unsigned char packets_t
 {
     Q_ASSERT(this->BulkInEpt);
     bool status = true;
-    UCHAR inBuf[PACKET_SIZE];
-    LONG packet_length = PACKET_SIZE;
+    UCHAR inBuf[RX_TRANSFER_SIZE];
+    LONG packet_length = RX_TRANSFER_SIZE;
     rx_buf.clear();
 
     if (!this->communication_enabled) return FALSE;
@@ -252,7 +255,7 @@ bool MainWindow::read_bulk(QList<unsigned char> &rx_buf, unsigned char packets_t
 
         if (status)
         {
-            for (int i=0; i<PACKET_SIZE; i++)
+            for (int i=0; i<RX_TRANSFER_SIZE; i++)
             {
                 rx_buf.append(inBuf[i]);
             }
@@ -435,4 +438,3 @@ void MainWindow::on_spinBox_valueChanged(int arg1)
 {
     ui->time_label->setText(QString("%1ms").arg(arg1*0.32768));
 }
-
