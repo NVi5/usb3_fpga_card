@@ -91,7 +91,7 @@ int main()
 
     while (1) {
     	new_state = IORD_ALTERA_AVALON_PIO_DATA(STATE_IO_BASE);
-    	if (new_state == 8 && old_state != 8)
+    	if (new_state != old_state)
     	{
             printf("%d\n", IORD_ALTERA_AVALON_PIO_DATA(DATA_IO_BASE));
     	}

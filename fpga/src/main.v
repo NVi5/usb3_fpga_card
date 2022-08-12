@@ -22,33 +22,34 @@ module main (
     output        CLK_OUT  // output clk 100 Mhz and 180 phase shift
 );
 
-    reg [1:0] oe_delay_cnt;
-    reg rd_oe_delay_cnt;
+    reg  [ 1:0] oe_delay_cnt;
+    reg         rd_oe_delay_cnt;
     wire [31:0] fifo_data_in;
-    reg [7:0] data_gen_0;
-    reg [7:0] data_gen_1;
-    reg [7:0] data_gen_2;
-    reg [7:0] data_gen_3;
-    reg [31:0] wait_ctr;
+    reg  [ 7:0] data_gen_0;
+    reg  [ 7:0] data_gen_1;
+    reg  [ 7:0] data_gen_2;
+    reg  [ 7:0] data_gen_3;
+    reg  [31:0] wait_ctr;
+    reg         update_ctr_flag;
 
     wire [31:0] data_out;
-    reg [31:0] DQ_d;
+    reg  [31:0] DQ_d;
 
-    reg SLRD_loopback_d1_;
-    reg SLRD_loopback_d2_;
-    reg SLRD_loopback_d3_;
-    reg SLRD_loopback_d4_;
-    reg [1:0] fifo_address;
-    reg [1:0] fifo_address_d;
-    reg FLAGA_d;
-    reg FLAGB_d;
-    reg FLAGC_d;
-    reg FLAGD_d;
+    reg         SLRD_loopback_d1_;
+    reg         SLRD_loopback_d2_;
+    reg         SLRD_loopback_d3_;
+    reg         SLRD_loopback_d4_;
+    reg  [ 1:0] fifo_address;
+    reg  [ 1:0] fifo_address_d;
+    reg         FLAGA_d;
+    reg         FLAGB_d;
+    reg         FLAGC_d;
+    reg         FLAGD_d;
     wire [31:0] data_out_loopback;
 
-    reg [3:0] current_sm_state;
-    reg [3:0] next_sm_state;
-    reg SLWR_loopback_1d_;
+    reg  [ 3:0] current_sm_state;
+    reg  [ 3:0] next_sm_state;
+    reg         SLWR_loopback_1d_;
 
     // parameters for LoopBack mode state machine
     parameter [3:0] sm_idle = 4'd0;
@@ -93,7 +94,7 @@ module main (
     nios u0 (
         .clk_clk         (clk_pll),
         .reset_reset_n   (reset_),
-        .state_in_export (current_sm_state),
+        .state_in_export (update_ctr_flag),
         .data_in_export  (wait_ctr)
     );
 
@@ -183,9 +184,8 @@ module main (
         if (!reset_) begin
             transfer_ctr <= 0;
         end else begin
-            if (transfer_ctr > 0) begin
-                if (current_sm_state == sm_write_wr_delay)
-                    transfer_ctr <= transfer_ctr - 1;
+            if (transfer_ctr > 0 && current_sm_state == sm_write_wr_delay) begin
+                transfer_ctr <= transfer_ctr - 1;
             end else if ((SLRD_loopback_d3_ == 1'b0) && (SLRD_loopback_d4_ == 1'b1)) begin
                 transfer_ctr <= 16;
             end
@@ -226,6 +226,17 @@ module main (
             wait_ctr <= 0;
         end else if (current_sm_state == sm_wait_flagb || current_sm_state == sm_wait_flaga) begin
             wait_ctr <= wait_ctr + 1;
+        end
+    end
+
+    // Wait counter
+    always @(posedge clk_pll, negedge reset_) begin
+        if (!reset_) begin
+            update_ctr_flag <= 0;
+        end else if (current_sm_state == sm_wait_flagb || current_sm_state == sm_wait_flaga) begin
+            update_ctr_flag <= 0;
+        end else begin
+            update_ctr_flag <= 1;
         end
     end
 
