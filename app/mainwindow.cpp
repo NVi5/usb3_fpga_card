@@ -6,9 +6,11 @@
 #include "Windows.h"
 
 #define PACKET_SIZE (16*1024)
-#define RX_PACKETS_PER_TRANSFER 2
+#define RX_PACKETS_PER_TRANSFER (4)
+#define TX_PACKETS_PER_TRANSFER (1)
+#define QUEUE_SIZE (4)
+
 #define RX_TRANSFER_SIZE (PACKET_SIZE*RX_PACKETS_PER_TRANSFER)
-#define TX_PACKETS_PER_TRANSFER 1
 #define TX_TRANSFER_SIZE (PACKET_SIZE*TX_PACKETS_PER_TRANSFER)
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow), BulkInEpt(NULL), BulkOutEpt(NULL)
@@ -198,7 +200,8 @@ void MainWindow::limitAxisRange(QCPAxis * axis, const QCPRange & newRange, const
 
 bool MainWindow::send_bulk(QList<unsigned char> &tx_buf)
 {
-    Q_ASSERT(this->BulkOutEpt);
+    Q_ASSERT(BulkOutEpt);
+
     if (!this->communication_enabled || tx_buf.size() > TX_TRANSFER_SIZE) return FALSE;
 
     LONG packet_length = TX_TRANSFER_SIZE;
@@ -209,7 +212,7 @@ bool MainWindow::send_bulk(QList<unsigned char> &tx_buf)
         outBuf[i] = tx_buf.at(i);
     }
 
-    BOOL status = this->BulkOutEpt->XferData(outBuf, packet_length);
+    BOOL status = BulkOutEpt->XferData(outBuf, packet_length);
 
     qDebug() << "Sent: " << tx_buf << "Result: " << status;
 
@@ -218,54 +221,99 @@ bool MainWindow::send_bulk(QList<unsigned char> &tx_buf)
 
 bool MainWindow::read_bulk(QList<unsigned char> &rx_buf, unsigned char packets_to_read)
 {
-    Q_ASSERT(this->BulkInEpt);
+    Q_ASSERT(BulkInEpt);
+
     bool status = true;
-    UCHAR inBuf[RX_TRANSFER_SIZE];
+    int q_ctr = 0;
+    UCHAR inBuf[QUEUE_SIZE][RX_TRANSFER_SIZE];
+    OVERLAPPED inOvLap[QUEUE_SIZE];
+    UCHAR *inContext[QUEUE_SIZE];
     LONG packet_length = RX_TRANSFER_SIZE;
+
     rx_buf.clear();
 
     if (!this->communication_enabled) return FALSE;
 
-    OVERLAPPED inOvLap;
-    inOvLap.hEvent = CreateEvent(NULL, false, false, L"CYUSB_IN");
+    for (int i=0; i < QUEUE_SIZE; i++)
+    {
+        inOvLap[i].hEvent = CreateEvent(NULL, false, false, L"CYUSB_IN");
+    }
 
     ui->lb_status->setText("Reading data");
 
-    for (int i=0; i<packets_to_read; i++)
+    for (int i=0; i < QUEUE_SIZE; i++)
     {
-        UCHAR *inContext = this->BulkInEpt->BeginDataXfer(inBuf, packet_length, &inOvLap);
-
-        if(!this->BulkInEpt->WaitForXfer(&inOvLap, 1500))
+        inContext[i] = BulkInEpt->BeginDataXfer(inBuf[i], packet_length, &inOvLap[i]);
+        if (BulkInEpt->NtStatus || BulkInEpt->UsbdStatus) // BeginDataXfer failed
         {
-            status = false;
-
-            this->BulkInEpt->Abort();
-            if (this->BulkInEpt->LastError == ERROR_IO_PENDING)
-            {
-                qDebug() << "BulkInEpt ERROR_IO_PENDING";
-                WaitForSingleObject(inOvLap.hEvent, 1500);
-            }
-            else
-            {
-                qDebug() << "BulkInEpt unknown error - " << this->BulkInEpt->LastError;
-                ui->lb_status->setText("Error");
-            }
+            qDebug() << "Xfer request rejected. NTSTATUS = " << BulkInEpt->NtStatus;
+            status = FALSE;
         }
+    }
 
-        this->BulkInEpt->FinishDataXfer(inBuf, packet_length, &inOvLap, inContext);
-
-        if (status)
+    if (status)
+    {
+        for (int i=0; i < QUEUE_SIZE; i++)
         {
-            for (int i=0; i<RX_TRANSFER_SIZE; i++)
+            LONG r_packet_length = packet_length; // Reset each time because FinishDataXfer may modify it
+
+            if(!BulkInEpt->WaitForXfer(&inOvLap[q_ctr], 1500))
             {
-                rx_buf.append(inBuf[i]);
+                status = false;
+
+                BulkInEpt->Abort();
+                if (BulkInEpt->LastError == ERROR_IO_PENDING)
+                {
+                    qDebug() << "WaitForXfer ERROR_IO_PENDING";
+                    WaitForSingleObject(inOvLap[q_ctr].hEvent, 2000);
+                }
+                else
+                {
+                    qDebug() << "WaitForXfer unknown error - " << BulkInEpt->LastError;
+                    ui->lb_status->setText("Error");
+                }
+            }
+
+            if (!BulkInEpt->FinishDataXfer(inBuf[q_ctr], r_packet_length, &inOvLap[q_ctr], inContext[q_ctr]))
+            {
+                qDebug() << "FinishDataXfer Error";
+                status = false;
+            }
+
+            if (status)
+            {
+                for (int i=0; i < r_packet_length; i++)
+                {
+                    rx_buf.append(inBuf[q_ctr][i]);
+                }
+            }
+
+            inContext[q_ctr] = BulkInEpt->BeginDataXfer(inBuf[q_ctr], packet_length, &inOvLap[q_ctr]);
+            if (BulkInEpt->NtStatus || BulkInEpt->UsbdStatus) // BeginDataXfer failed
+            {
+                qDebug() << "Xfer request rejected. NTSTATUS = " << BulkInEpt->NtStatus;
+                status = FALSE;
+            }
+
+            q_ctr++;
+
+            if (q_ctr == QUEUE_SIZE)
+            {
+                q_ctr = 0;
             }
         }
     }
 
     qDebug() << "read_bulk Received data: " << rx_buf.size();
 
-    CloseHandle(inOvLap.hEvent);
+    BulkInEpt->Abort();
+
+    for (int i=0; i < QUEUE_SIZE; i++)
+    {
+        BulkInEpt->WaitForXfer(&inOvLap[i], 1500);
+        BulkInEpt->FinishDataXfer(inBuf[i], packet_length, &inOvLap[i], inContext[i]);
+        CloseHandle(inOvLap[i].hEvent);
+    }
 
     return status;
 }
@@ -287,8 +335,8 @@ void MainWindow::select_endpoints(void)
     outEpAddress = strOutData.toInt(&ok, 16);
     Q_ASSERT(ok);
 
-    this->BulkOutEpt = this->selectedDevice->EndPointOf(outEpAddress);
-    this->BulkInEpt = this->selectedDevice->EndPointOf(inEpAddress);
+    BulkOutEpt = this->selectedDevice->EndPointOf(outEpAddress);
+    BulkInEpt = this->selectedDevice->EndPointOf(inEpAddress);
 }
 
 bool MainWindow::get_devices()
@@ -382,7 +430,7 @@ void MainWindow::on_btn_select_clicked()
 
     this->select_endpoints();
 
-    if (this->BulkOutEpt && this->BulkInEpt)
+    if (BulkOutEpt && BulkInEpt)
     {
         this->communication_enabled = true;
         ui->lb_status->setText("Selected");
