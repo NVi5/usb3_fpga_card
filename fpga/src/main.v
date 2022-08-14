@@ -31,6 +31,10 @@ module main (
     reg  [ 7:0] data_gen_3;
     reg  [31:0] wait_ctr;
     reg         update_ctr_flag;
+    reg  [31:0] wait_ctr_gbl;
+    reg         wait_ctr_gbl_reset;
+    reg  [15:0] tx_ctr;
+    reg         tx_ctr_reset;
 
     wire [31:0] data_out;
     reg  [31:0] DQ_d;
@@ -96,6 +100,16 @@ module main (
         .reset_reset_n   (reset_),
         .state_in_export (update_ctr_flag),
         .data_in_export  (wait_ctr)
+    );
+
+    vio u1 (
+        .probe(tx_ctr),
+        .source(tx_ctr_reset)
+    );
+
+    vio u2 (
+        .probe(wait_ctr_gbl),
+        .source(wait_ctr_gbl_reset)
     );
 
     // flopping the INPUTs flags
@@ -229,7 +243,18 @@ module main (
         end
     end
 
-    // Wait counter
+    // Wait global counter
+    always @(posedge clk_pll, negedge reset_) begin
+        if (!reset_) begin
+            wait_ctr_gbl <= 0;
+        end else if (wait_ctr_gbl_reset) begin
+            wait_ctr_gbl <= 0;
+        end else if (current_sm_state == sm_wait_flagb || current_sm_state == sm_wait_flaga) begin
+            wait_ctr_gbl <= wait_ctr_gbl + 1;
+        end
+    end
+
+    // Wait counter flag
     always @(posedge clk_pll, negedge reset_) begin
         if (!reset_) begin
             update_ctr_flag <= 0;
@@ -237,6 +262,17 @@ module main (
             update_ctr_flag <= 0;
         end else begin
             update_ctr_flag <= 1;
+        end
+    end
+
+    // TX counter
+    always @(posedge clk_pll, negedge reset_) begin
+        if (!reset_) begin
+            tx_ctr <= 0;
+        end else if (tx_ctr_reset) begin
+            tx_ctr <= 0;
+        end else if (current_sm_state == sm_write_wr_delay) begin
+            tx_ctr <= tx_ctr + 1;
         end
     end
 
