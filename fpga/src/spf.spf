@@ -1,5 +1,5 @@
 <session jtag_chain="Cyclone 10 LP Evaluation Kit [USB-1]" jtag_device="@1: 10CL025(Y|Z)/EP3C25/EP4CE22 (0x020F30DD)" sof_file="">
-  <display_attributes is_max_probe_read_interval="1" is_write_immediate="1" probe_read_interval="1" probe_read_interval_units="s"/>
+  <display_attributes is_max_probe_read_interval="0" is_write_immediate="1" probe_read_interval="10" probe_read_interval_units="Hz"/>
   <instance enable_logging="true" entity_name="NONE" is_auto_node="true" name="vio:u1|altsource_probe_top:in_system_sources_probes_0|altsource_probe:issp_impl">
     <node_ip_info instance_id="0" mfg_id="110" node_id="9" version="0"/>
     <sources>
@@ -108,7 +108,7 @@
       <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[99]"/>
     </probes>
     <view>
-      <view_node expanded="false" group_name="tx_ctr" index="0" lsb_to_msb="false" node_type="probe" view_type="group_header"/>
+      <view_node expanded="false" group_name="tx_ctr" index="0" lsb_to_msb="false" node_type="probe" radix="unsigned" view_type="group_header"/>
       <view_node expanded="true" index="99" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="98" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="97" node_type="probe" view_type="group_member"/>
@@ -125,7 +125,7 @@
       <view_node expanded="true" index="86" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="85" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="84" node_type="probe" view_type="group_member"/>
-      <view_node expanded="false" group_name="wait_ctr_gbl" index="0" lsb_to_msb="false" node_type="probe" view_type="group_header"/>
+      <view_node expanded="false" group_name="wait_ctr_gbl" index="0" lsb_to_msb="false" node_type="probe" radix="unsigned" view_type="group_header"/>
       <view_node expanded="true" index="83" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="82" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="81" node_type="probe" view_type="group_member"/>
@@ -158,7 +158,7 @@
       <view_node expanded="true" index="54" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="53" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="52" node_type="probe" view_type="group_member"/>
-      <view_node expanded="false" group_name="packets_to_send" index="0" lsb_to_msb="false" node_type="probe" view_type="group_header"/>
+      <view_node expanded="false" group_name="packets_to_send" index="0" lsb_to_msb="false" node_type="probe" radix="unsigned" view_type="group_header"/>
       <view_node expanded="true" index="51" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="50" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="49" node_type="probe" view_type="group_member"/>
@@ -191,12 +191,12 @@
       <view_node expanded="true" index="22" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="21" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="20" node_type="probe" view_type="group_member"/>
-      <view_node expanded="false" group_name="current_sm_state" index="0" lsb_to_msb="false" node_type="probe" view_type="group_header"/>
+      <view_node expanded="false" group_name="current_sm_state" index="0" lsb_to_msb="false" node_type="probe" radix="unsigned" view_type="group_header"/>
       <view_node expanded="true" index="19" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="18" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="17" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="16" node_type="probe" view_type="group_member"/>
-      <view_node expanded="false" group_name="ch_src_0" index="0" lsb_to_msb="false" node_type="probe" view_type="group_header"/>
+      <view_node expanded="false" group_name="ch_src_0" index="0" lsb_to_msb="false" node_type="probe" radix="unsigned" view_type="group_header"/>
       <view_node expanded="true" index="15" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="14" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="13" node_type="probe" view_type="group_member"/>
@@ -205,7 +205,7 @@
       <view_node expanded="true" index="10" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="9" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="8" node_type="probe" view_type="group_member"/>
-      <view_node expanded="false" group_name="ch_data" index="0" lsb_to_msb="false" node_type="probe" view_type="group_header"/>
+      <view_node expanded="false" group_name="ch_data" index="0" lsb_to_msb="false" node_type="probe" radix="bin" view_type="group_header"/>
       <view_node expanded="true" index="7" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="6" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="5" node_type="probe" view_type="group_member"/>
@@ -216,6 +216,6 @@
       <view_node expanded="true" index="0" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="0" node_type="source" view_type="independent"/>
     </view>
-    <log data="00000000000000000000000000000000000000000000000000008000400000088900000040007010080000000062000000100E0200010000000C4000000200C10200200000084E000000600830400400000009C100000C0000000000000000000000000000" max_size="8" size="8" time="B765AF2600000000C765AF26000000008B65AF26000000001E65AF26000000002E65AF2600000000AE65AF2600000000CE65AF260000000047B5AF2600000000" width="101"/>
+    <log data="2021001000000AF210000080040420020000004F520000001080840040000008EB40000002001090080000000D790000004002021001000000AF210000080040420020000004F520000001080840040000008EB40000002000080080000000CAA000008400" max_size="8" size="8" time="8036AF26000000008036AF26000000008036AF26000000008036AF26000000008036AF26000000008036AF26000000008036AF26000000003436AF2600000000" width="101"/>
   </instance>
 </session>

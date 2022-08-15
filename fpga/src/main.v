@@ -25,10 +25,7 @@ module main (
     reg  [ 1:0] oe_delay_cnt;
     reg         rd_oe_delay_cnt;
     wire [31:0] fifo_data_in;
-    reg  [ 7:0] data_gen_0;
-    reg  [ 7:0] data_gen_1;
-    reg  [ 7:0] data_gen_2;
-    reg  [ 7:0] data_gen_3;
+    reg  [ 7:0] data_gen;
     reg  [31:0] wait_ctr;
     reg         update_ctr_flag;
     reg  [31:0] wait_ctr_gbl;
@@ -91,6 +88,7 @@ module main (
         .areset(1'b0),
         .inclk0(CLK50),
         .c0    (clk_pll),
+        .c1    (clk_pllx4),
         .locked(lock)
     );
 
@@ -402,51 +400,43 @@ module main (
         end
     end
 
-    assign data_src = {PB, 1'b0, data_gen_0};
+    assign data_src = {PB, 1'b0, data_gen};
+    // Invert byte order to match app
+    assign ch_data[7] = data_src[ch_src[0]]; // CH0
+    assign ch_data[6] = data_src[ch_src[1]]; // CH1
+    assign ch_data[5] = data_src[ch_src[2]]; // CH2
+    assign ch_data[4] = data_src[ch_src[3]]; // CH3
+    assign ch_data[3] = data_src[ch_src[4]]; // CH4
+    assign ch_data[2] = data_src[ch_src[5]]; // CH5
+    assign ch_data[1] = data_src[ch_src[6]]; // CH6
+    assign ch_data[0] = data_src[ch_src[7]]; // CH7
 
-    assign ch_data[0] = data_src[ch_src[0]];
-    assign ch_data[1] = data_src[ch_src[1]];
-    assign ch_data[2] = data_src[ch_src[2]];
-    assign ch_data[3] = data_src[ch_src[3]];
-    assign ch_data[4] = data_src[ch_src[4]];
-    assign ch_data[5] = data_src[ch_src[5]];
-    assign ch_data[6] = data_src[ch_src[6]];
-    assign ch_data[7] = data_src[ch_src[7]];
-
-    // // fifo instantiation for loop back mode
-    // fifo fifo_inst(
-    //     .din(fifo_data_in),
-    //     .write_busy(fifo_push),
-    //     .fifo_full(),
-    //     .dout(data_out_loopback),
-    //     .read_busy(fifo_pop),
-    //     .fifo_empty(),
-    //     .fifo_clk(clk_pll),
-    //     .reset_(reset_),
-    //     .fifo_flush(fifo_flush)
-    // );
-
-    reg [31:0] data_out_loopback_d;
-    always @(posedge clk_pll) begin
-        // data_out_loopback_d <= {28'h0, ~USER_LED[3:0]};
-        data_out_loopback_d <= {data_gen_0, data_gen_1, data_gen_2, data_gen_3};
-    end
 
     // data generator counter
-    always @(posedge clk_pll, negedge reset_)begin
+    always @(posedge clk_pllx4, negedge reset_)begin
         if(!reset_)begin
-            data_gen_0 <= 8'd0;
-            data_gen_1 <= 8'd1;
-            data_gen_2 <= 8'd2;
-            data_gen_3 <= 8'd3;
+            data_gen <= 8'd0;
         end else begin
-            data_gen_0 <= data_gen_0 + 4;
-            data_gen_1 <= data_gen_1 + 4;
-            data_gen_2 <= data_gen_2 + 4;
-            data_gen_3 <= data_gen_3 + 4;
+            data_gen <= data_gen + 1;
         end
     end
 
-    assign DQ = (SLWR_loopback_1d_) ? 32'dz : data_out_loopback_d;
+    reg [31:0] ch_data_d;
+    // data generator counter
+    always @(posedge clk_pllx4, negedge reset_)begin
+        if(!reset_)begin
+            ch_data_d <= 32'd0;
+        end else begin
+            ch_data_d <= {ch_data, ch_data_d[31:8]};
+        end
+    end
+
+    reg [31:0] data_out_d;
+    // flop data with slower clock
+    always @(posedge clk_pll) begin
+        data_out_d <= ch_data_d;
+    end
+
+    assign DQ = (SLWR_loopback_1d_) ? 32'dz : data_out_d;
 
 endmodule
