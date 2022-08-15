@@ -57,6 +57,7 @@ private:
     bool get_endpoint_for_device();
     void populate_header(QList<unsigned char> &buf, unsigned int number_of_packets);
     void handle_button();
+    unsigned char reverse(unsigned char b);
 
     bool communication_enabled;
     Ui::MainWindow *ui;

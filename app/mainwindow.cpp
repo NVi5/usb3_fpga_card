@@ -5,8 +5,10 @@
 #include <QColor>
 #include "Windows.h"
 
+#define DEBUG_PATTERN
+
 #define PACKET_SIZE (16*1024)
-#define RX_PACKETS_PER_TRANSFER (8)
+#define RX_PACKETS_PER_TRANSFER (3)
 #define TX_PACKETS_PER_TRANSFER (1)
 #define QUEUE_SIZE (1)
 
@@ -282,8 +284,20 @@ bool MainWindow::read_bulk(QList<unsigned char> &rx_buf, unsigned char packets_t
 
             if (status)
             {
+#ifdef DEBUG_PATTERN
+                UCHAR old_byte = 0;
+                UCHAR new_byte = 0;
+#endif /* DEBUG_PATTERN */
                 for (int i=0; i < r_packet_length; i++)
                 {
+#ifdef DEBUG_PATTERN
+                    new_byte = reverse(inBuf[q_ctr][i]);
+                    if ((new_byte - old_byte) != 1 && new_byte != 0 && old_byte != 255)
+                    {
+                        qDebug() << "Not continuous data new: " << new_byte << "old: " << old_byte;
+                    }
+                    old_byte = new_byte;
+#endif /* DEBUG_PATTERN */
                     rx_buf.append(inBuf[q_ctr][i]);
                 }
             }
@@ -470,6 +484,14 @@ void MainWindow::handle_button()
     qDebug() << "send_bulk: " << this->send_bulk(new_data);
 }
 
+unsigned char MainWindow::reverse(unsigned char b)
+{
+   b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
+   b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
+   b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
+   return b;
+}
+
 void MainWindow::on_btn_select_clicked()
 {
     qDebug() << "on_btn_select_clicked";
@@ -572,4 +594,3 @@ void MainWindow::on_clr_btn_clicked()
     data.append(0);
     this->update_plot(data);
 }
-
