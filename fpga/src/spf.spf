@@ -1,98 +1,131 @@
-<session jtag_chain="Cyclone 10 LP Evaluation Kit [USB-1]" jtag_device="@1: 10CL025(Y|Z)/EP3C25/EP4CE22 (0x020F30DD)">
-  <display_attributes is_max_probe_read_interval="0" is_write_immediate="1" probe_read_interval="1" probe_read_interval_units="s"/>
-  <instance enable_logging="true" entity_name="" is_auto_node="true" name="">
+<session jtag_chain="Cyclone 10 LP Evaluation Kit [USB-1]" jtag_device="@1: 10CL025(Y|Z)/EP3C25/EP4CE22 (0x020F30DD)" sof_file="">
+  <display_attributes is_max_probe_read_interval="1" is_write_immediate="1" probe_read_interval="1" probe_read_interval_units="s"/>
+  <instance enable_logging="true" entity_name="NONE" is_auto_node="true" name="vio:u1|altsource_probe_top:in_system_sources_probes_0|altsource_probe:issp_impl">
     <node_ip_info instance_id="0" mfg_id="110" node_id="9" version="0"/>
     <sources>
-      <source name="source[0]" value="false"/>
+      <source name="all_ctr_reset" value="false"/>
     </sources>
     <probes>
-      <probe name="probe[0]"/>
-      <probe name="probe[1]"/>
-      <probe name="probe[2]"/>
-      <probe name="probe[3]"/>
-      <probe name="probe[4]"/>
-      <probe name="probe[5]"/>
-      <probe name="probe[6]"/>
-      <probe name="probe[7]"/>
-      <probe name="probe[8]"/>
-      <probe name="probe[9]"/>
-      <probe name="probe[10]"/>
-      <probe name="probe[11]"/>
-      <probe name="probe[12]"/>
-      <probe name="probe[13]"/>
-      <probe name="probe[14]"/>
-      <probe name="probe[15]"/>
-      <probe name="probe[16]"/>
-      <probe name="probe[17]"/>
-      <probe name="probe[18]"/>
-      <probe name="probe[19]"/>
-      <probe name="probe[20]"/>
-      <probe name="probe[21]"/>
-      <probe name="probe[22]"/>
-      <probe name="probe[23]"/>
-      <probe name="probe[24]"/>
-      <probe name="probe[25]"/>
-      <probe name="probe[26]"/>
-      <probe name="probe[27]"/>
-      <probe name="probe[28]"/>
-      <probe name="probe[29]"/>
-      <probe name="probe[30]"/>
-      <probe name="probe[31]"/>
-      <probe name="probe[32]"/>
-      <probe name="probe[33]"/>
-      <probe name="probe[34]"/>
-      <probe name="probe[35]"/>
-      <probe name="probe[36]"/>
-      <probe name="probe[37]"/>
-      <probe name="probe[38]"/>
-      <probe name="probe[39]"/>
-      <probe name="probe[40]"/>
-      <probe name="probe[41]"/>
-      <probe name="probe[42]"/>
-      <probe name="probe[43]"/>
-      <probe name="probe[44]"/>
-      <probe name="probe[45]"/>
-      <probe name="probe[46]"/>
-      <probe name="probe[47]"/>
-      <probe name="probe[48]"/>
-      <probe name="probe[49]"/>
-      <probe name="probe[50]"/>
-      <probe name="probe[51]"/>
-      <probe name="probe[52]"/>
-      <probe name="probe[53]"/>
-      <probe name="probe[54]"/>
-      <probe name="probe[55]"/>
-      <probe name="probe[56]"/>
-      <probe name="probe[57]"/>
-      <probe name="probe[58]"/>
-      <probe name="probe[59]"/>
-      <probe name="probe[60]"/>
-      <probe name="probe[61]"/>
-      <probe name="probe[62]"/>
-      <probe name="probe[63]"/>
-      <probe name="probe[64]"/>
-      <probe name="probe[65]"/>
-      <probe name="probe[66]"/>
-      <probe name="probe[67]"/>
-      <probe name="probe[68]"/>
-      <probe name="probe[69]"/>
-      <probe name="probe[70]"/>
-      <probe name="probe[71]"/>
-      <probe name="probe[72]"/>
-      <probe name="probe[73]"/>
-      <probe name="probe[74]"/>
-      <probe name="probe[75]"/>
-      <probe name="probe[76]"/>
-      <probe name="probe[77]"/>
-      <probe name="probe[78]"/>
-      <probe name="probe[79]"/>
-      <probe name="probe[80]"/>
-      <probe name="probe[81]"/>
-      <probe name="probe[82]"/>
-      <probe name="probe[83]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[0]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[1]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[2]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[3]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[4]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[5]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[6]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[7]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[8]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[9]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[10]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[11]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[12]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[13]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[14]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[15]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[16]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[17]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[18]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[19]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[20]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[21]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[22]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[23]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[24]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[25]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[26]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[27]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[28]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[29]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[30]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[31]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[32]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[33]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[34]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[35]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[36]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[37]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[38]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[39]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[40]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[41]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[42]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[43]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[44]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[45]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[46]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[47]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[48]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[49]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[50]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[51]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[52]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[53]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[54]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[55]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[56]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[57]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[58]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[59]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[60]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[61]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[62]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[63]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[64]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[65]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[66]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[67]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[68]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[69]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[70]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[71]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[72]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[73]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[74]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[75]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[76]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[77]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[78]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[79]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[80]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[81]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[82]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[83]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[84]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[85]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[86]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[87]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[88]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[89]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[90]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[91]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[92]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[93]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[94]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[95]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[96]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[97]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[98]"/>
+      <probe name="vio:u1|altsource_probe_top:in_system_sources_probes_0|probe[99]"/>
     </probes>
     <view>
       <view_node expanded="false" group_name="tx_ctr" index="0" lsb_to_msb="false" node_type="probe" view_type="group_header"/>
+      <view_node expanded="true" index="99" node_type="probe" view_type="group_member"/>
+      <view_node expanded="true" index="98" node_type="probe" view_type="group_member"/>
+      <view_node expanded="true" index="97" node_type="probe" view_type="group_member"/>
+      <view_node expanded="true" index="96" node_type="probe" view_type="group_member"/>
+      <view_node expanded="true" index="95" node_type="probe" view_type="group_member"/>
+      <view_node expanded="true" index="94" node_type="probe" view_type="group_member"/>
+      <view_node expanded="true" index="93" node_type="probe" view_type="group_member"/>
+      <view_node expanded="true" index="92" node_type="probe" view_type="group_member"/>
+      <view_node expanded="true" index="91" node_type="probe" view_type="group_member"/>
+      <view_node expanded="true" index="90" node_type="probe" view_type="group_member"/>
+      <view_node expanded="true" index="89" node_type="probe" view_type="group_member"/>
+      <view_node expanded="true" index="88" node_type="probe" view_type="group_member"/>
+      <view_node expanded="true" index="87" node_type="probe" view_type="group_member"/>
+      <view_node expanded="true" index="86" node_type="probe" view_type="group_member"/>
+      <view_node expanded="true" index="85" node_type="probe" view_type="group_member"/>
+      <view_node expanded="true" index="84" node_type="probe" view_type="group_member"/>
+      <view_node expanded="false" group_name="wait_ctr_gbl" index="0" lsb_to_msb="false" node_type="probe" view_type="group_header"/>
       <view_node expanded="true" index="83" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="82" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="81" node_type="probe" view_type="group_member"/>
@@ -109,7 +142,6 @@
       <view_node expanded="true" index="70" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="69" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="68" node_type="probe" view_type="group_member"/>
-      <view_node expanded="false" group_name="wait_ctr_gbl" index="0" lsb_to_msb="false" node_type="probe" view_type="group_header"/>
       <view_node expanded="true" index="67" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="66" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="65" node_type="probe" view_type="group_member"/>
@@ -126,6 +158,7 @@
       <view_node expanded="true" index="54" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="53" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="52" node_type="probe" view_type="group_member"/>
+      <view_node expanded="false" group_name="packets_to_send" index="0" lsb_to_msb="false" node_type="probe" view_type="group_header"/>
       <view_node expanded="true" index="51" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="50" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="49" node_type="probe" view_type="group_member"/>
@@ -142,7 +175,6 @@
       <view_node expanded="true" index="38" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="37" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="36" node_type="probe" view_type="group_member"/>
-      <view_node expanded="false" group_name="packets_to_send" index="0" lsb_to_msb="false" node_type="probe" view_type="group_header"/>
       <view_node expanded="true" index="35" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="34" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="33" node_type="probe" view_type="group_member"/>
@@ -159,10 +191,12 @@
       <view_node expanded="true" index="22" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="21" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="20" node_type="probe" view_type="group_member"/>
+      <view_node expanded="false" group_name="current_sm_state" index="0" lsb_to_msb="false" node_type="probe" view_type="group_header"/>
       <view_node expanded="true" index="19" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="18" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="17" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="16" node_type="probe" view_type="group_member"/>
+      <view_node expanded="false" group_name="ch_src_0" index="0" lsb_to_msb="false" node_type="probe" view_type="group_header"/>
       <view_node expanded="true" index="15" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="14" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="13" node_type="probe" view_type="group_member"/>
@@ -171,18 +205,17 @@
       <view_node expanded="true" index="10" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="9" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="8" node_type="probe" view_type="group_member"/>
+      <view_node expanded="false" group_name="ch_data" index="0" lsb_to_msb="false" node_type="probe" view_type="group_header"/>
       <view_node expanded="true" index="7" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="6" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="5" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="4" node_type="probe" view_type="group_member"/>
-      <view_node expanded="false" group_name="current_sm_state" index="0" lsb_to_msb="false" node_type="probe" view_type="group_header"/>
       <view_node expanded="true" index="3" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="2" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="1" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="0" node_type="probe" view_type="group_member"/>
-      <view_node expanded="false" group_name="all_ctr_reset" index="0" lsb_to_msb="false" node_type="source" radix="unsigned" view_type="group_header"/>
-      <view_node expanded="true" index="0" node_type="source" view_type="group_member"/>
+      <view_node expanded="true" index="0" node_type="source" view_type="independent"/>
     </view>
-    <log data="001000000062000000100002000000C790000004004040000000000000000000080000000000000000000001000000000000000000002000000CB40000002000040000008031000008000080000000F83000008100" max_size="8" size="8" time="58799F260000000098799F2600000000E7A99F260000000038A99F2600000000FEA99F26000000003FA99F2600000000CDC99F260000000051D99F2600000000" width="85"/>
+    <log data="00000000000000000000000000000000000000000000000000008000400000088900000040007010080000000062000000100E0200010000000C4000000200C10200200000084E000000600830400400000009C100000C0000000000000000000000000000" max_size="8" size="8" time="B765AF2600000000C765AF26000000008B65AF26000000001E65AF26000000002E65AF2600000000AE65AF2600000000CE65AF260000000047B5AF2600000000" width="101"/>
   </instance>
 </session>

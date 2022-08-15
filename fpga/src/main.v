@@ -40,6 +40,10 @@ module main (
     wire        read_ready;
     wire [31:0] read_data;
 
+    reg  [ 7:0] ch_src[7:0];
+    wire [ 7:0] ch_data;
+    wire [ 12:0] data_src;
+
     wire [31:0] data_out;
     reg  [31:0] DQ_d;
 
@@ -107,7 +111,7 @@ module main (
     );
 
     vio u1 (
-        .probe({tx_ctr, wait_ctr_gbl, packets_to_send, current_sm_state}),
+        .probe({tx_ctr, wait_ctr_gbl, packets_to_send, current_sm_state, ch_src[0], ch_data}),
         .source(all_ctr_reset)
     );
 
@@ -369,14 +373,45 @@ module main (
     always @(posedge clk_pll, negedge reset_) begin
         if (!reset_) begin
             packets_to_send <= 32'h0;
+            ch_src[0] <= 8'h8;
+            ch_src[1] <= 8'h8;
+            ch_src[2] <= 8'h8;
+            ch_src[3] <= 8'h8;
+            ch_src[4] <= 8'h8;
+            ch_src[5] <= 8'h8;
+            ch_src[6] <= 8'h8;
+            ch_src[7] <= 8'h8;
         end else if (valid_packet) begin
             case (packet_index)
                 1: begin
                     packets_to_send <= read_data;
                 end
+                2: begin
+                    ch_src[0] <= read_data[7:0];
+                    ch_src[1] <= read_data[15:8];
+                    ch_src[2] <= read_data[23:16];
+                    ch_src[3] <= read_data[31:24];
+                end
+                3: begin
+                    ch_src[4] <= read_data[7:0];
+                    ch_src[5] <= read_data[15:8];
+                    ch_src[6] <= read_data[23:16];
+                    ch_src[7] <= read_data[31:24];
+                end
             endcase
         end
     end
+
+    assign data_src = {PB, 1'b0, data_gen_0};
+
+    assign ch_data[0] = data_src[ch_src[0]];
+    assign ch_data[1] = data_src[ch_src[1]];
+    assign ch_data[2] = data_src[ch_src[2]];
+    assign ch_data[3] = data_src[ch_src[3]];
+    assign ch_data[4] = data_src[ch_src[4]];
+    assign ch_data[5] = data_src[ch_src[5]];
+    assign ch_data[6] = data_src[ch_src[6]];
+    assign ch_data[7] = data_src[ch_src[7]];
 
     // // fifo instantiation for loop back mode
     // fifo fifo_inst(

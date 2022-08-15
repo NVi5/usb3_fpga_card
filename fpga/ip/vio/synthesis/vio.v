@@ -4,7 +4,7 @@
 
 `timescale 1 ps / 1 ps
 module vio (
-		input  wire [83:0] probe,  //  probes.probe
+		input  wire [99:0] probe,  //  probes.probe
 		output wire [0:0]  source  // sources.source
 	);
 
@@ -12,7 +12,7 @@ module vio (
 		.sld_auto_instance_index ("YES"),
 		.sld_instance_index      (0),
 		.instance_id             ("NONE"),
-		.probe_width             (84),
+		.probe_width             (100),
 		.source_width            (1),
 		.source_initial_value    ("0"),
 		.enable_metastability    ("NO")

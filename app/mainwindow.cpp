@@ -23,7 +23,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     this->get_devices();
     this->get_endpoint_for_device();
 
-    QStringList items = {"fpga_counter0", "fpga_counter1", "fpga_counter2", "fpga_counter3", "fpga_counter4", "fpga_counter5", "fpga_counter6", "fpga_counter7", "disabled"};
+    QStringList items = {"fpga_counter0", "fpga_counter1", "fpga_counter2", "fpga_counter3", "fpga_counter4", "fpga_counter5", "fpga_counter6", "fpga_counter7", "disabled", "PB0", "PB1", "PB2", "PB3"};
     QRegularExpression exp("ch[0-7]");
     QList<QComboBox *> channels = ui->channelBox->findChildren<QComboBox *>(exp);
 
@@ -476,13 +476,27 @@ void MainWindow::on_start_btn_clicked()
     new_data.append(0xB0);
     new_data.append(0xFE);
     new_data.append(0xCA);
-    new_data.append(ui->spinBox->value());
-    new_data.append(ui->spinBox->value() >> 8);
-    new_data.append(ui->spinBox->value() >> 16);
-    new_data.append(ui->spinBox->value() >> 24);
-    for (int i=0; i<248; ++i)
+
+    new_data.append((ui->spinBox->value() >>  0) & 0xFF);
+    new_data.append((ui->spinBox->value() >>  8) & 0xFF);
+    new_data.append((ui->spinBox->value() >> 16) & 0xFF);
+    new_data.append((ui->spinBox->value() >> 24) & 0xFF);
+
+    new_data.append(ui->ch0->currentIndex());
+    new_data.append(ui->ch1->currentIndex());
+    new_data.append(ui->ch2->currentIndex());
+    new_data.append(ui->ch3->currentIndex());
+
+    new_data.append(ui->ch4->currentIndex());
+    new_data.append(ui->ch5->currentIndex());
+    new_data.append(ui->ch6->currentIndex());
+    new_data.append(ui->ch7->currentIndex());
+
+    qDebug() << "on_start_btn_clicked header: " << new_data;
+
+    for (int i=0; i<(256 - new_data.size()); ++i)
     {
-        new_data.append(i);
+        new_data.append(0);
     }
 
     qDebug() << "send_bulk: " << this->send_bulk(new_data);

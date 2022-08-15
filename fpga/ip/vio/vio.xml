@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <deploy
- date="2022.08.15.02:22:33"
+ date="2022.08.15.15:53:27"
  outputDirectory="C:/Users/nvade/OneDrive/Dokumenty/Workspace/usb3_fpga_card/fpga/ip/vio/">
  <perimeter>
   <parameter
@@ -36,7 +36,7 @@
   <interface name="probes" kind="conduit" start="0">
    <property name="associatedClock" value="" />
    <property name="associatedReset" value="" />
-   <port name="probe" direction="input" role="probe" width="84" />
+   <port name="probe" direction="input" role="probe" width="100" />
   </interface>
   <interface name="sources" kind="conduit" start="0">
    <property name="associatedClock" value="" />
@@ -46,12 +46,12 @@
  </perimeter>
  <entity
    path=""
-   parameterizationKey="vio:1.0:AUTO_DEVICE=10CL025YU256I7G,AUTO_DEVICE_FAMILY=Cyclone 10 LP,AUTO_DEVICE_SPEEDGRADE=7,AUTO_GENERATION_ID=1660522952,AUTO_UNIQUE_ID=(altera_in_system_sources_probes:21.1:create_source_clock=false,create_source_clock_enable=false,device_family=Cyclone 10 LP,enable_metastability=NO,gui_use_auto_index=true,instance_id=NONE,probe_width=84,sld_auto_instance_index=YES,sld_instance_index=0,source_initial_value=0,source_width=1)"
+   parameterizationKey="vio:1.0:AUTO_DEVICE=10CL025YU256I7G,AUTO_DEVICE_FAMILY=Cyclone 10 LP,AUTO_DEVICE_SPEEDGRADE=7,AUTO_GENERATION_ID=1660571606,AUTO_UNIQUE_ID=(altera_in_system_sources_probes:21.1:create_source_clock=false,create_source_clock_enable=false,device_family=Cyclone 10 LP,enable_metastability=NO,gui_use_auto_index=true,instance_id=NONE,probe_width=100,sld_auto_instance_index=YES,sld_instance_index=0,source_initial_value=0,source_width=1)"
    instancePathKey="vio"
    kind="vio"
    version="1.0"
    name="vio">
-  <parameter name="AUTO_GENERATION_ID" value="1660522952" />
+  <parameter name="AUTO_GENERATION_ID" value="1660571606" />
   <parameter name="AUTO_DEVICE" value="10CL025YU256I7G" />
   <parameter name="AUTO_DEVICE_FAMILY" value="Cyclone 10 LP" />
   <parameter name="AUTO_UNIQUE_ID" value="" />
@@ -96,7 +96,7 @@
  </entity>
  <entity
    path="submodules/"
-   parameterizationKey="altera_in_system_sources_probes:21.1:create_source_clock=false,create_source_clock_enable=false,device_family=Cyclone 10 LP,enable_metastability=NO,gui_use_auto_index=true,instance_id=NONE,probe_width=84,sld_auto_instance_index=YES,sld_instance_index=0,source_initial_value=0,source_width=1"
+   parameterizationKey="altera_in_system_sources_probes:21.1:create_source_clock=false,create_source_clock_enable=false,device_family=Cyclone 10 LP,enable_metastability=NO,gui_use_auto_index=true,instance_id=NONE,probe_width=100,sld_auto_instance_index=YES,sld_instance_index=0,source_initial_value=0,source_width=1"
    instancePathKey="vio:.:in_system_sources_probes_0"
    kind="altera_in_system_sources_probes"
    version="21.1"
@@ -106,7 +106,7 @@
   <parameter name="source_initial_value" value="0" />
   <parameter name="sld_auto_instance_index" value="YES" />
   <parameter name="sld_instance_index" value="0" />
-  <parameter name="probe_width" value="84" />
+  <parameter name="probe_width" value="100" />
   <parameter name="source_width" value="1" />
   <parameter name="create_source_clock_enable" value="false" />
   <parameter name="device_family" value="Cyclone 10 LP" />
