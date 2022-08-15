@@ -32,9 +32,13 @@ module main (
     reg  [31:0] wait_ctr;
     reg         update_ctr_flag;
     reg  [31:0] wait_ctr_gbl;
-    reg         wait_ctr_gbl_reset;
     reg  [15:0] tx_ctr;
-    reg         tx_ctr_reset;
+    reg         all_ctr_reset;
+    reg  [31:0] packet_index;
+    reg         valid_packet;
+    reg  [31:0] packets_to_send;
+    wire        read_ready;
+    wire [31:0] read_data;
 
     wire [31:0] data_out;
     reg  [31:0] DQ_d;
@@ -103,13 +107,8 @@ module main (
     );
 
     vio u1 (
-        .probe(tx_ctr),
-        .source(tx_ctr_reset)
-    );
-
-    vio u2 (
-        .probe(wait_ctr_gbl),
-        .source(wait_ctr_gbl_reset)
+        .probe({tx_ctr, wait_ctr_gbl, packets_to_send, current_sm_state}),
+        .source(all_ctr_reset)
     );
 
     // flopping the INPUTs flags
@@ -193,15 +192,15 @@ module main (
         end
     end
 
-    reg [31:0] transfer_ctr;
+    reg [31:0] packets_number;
     always @(posedge clk_pll, negedge reset_) begin
         if (!reset_) begin
-            transfer_ctr <= 0;
+            packets_number <= 0;
         end else begin
-            if (transfer_ctr > 0 && current_sm_state == sm_write_wr_delay) begin
-                transfer_ctr <= transfer_ctr - 1;
-            end else if ((SLRD_loopback_d3_ == 1'b0) && (SLRD_loopback_d4_ == 1'b1)) begin
-                transfer_ctr <= 16;
+            if (packets_number > 0 && current_sm_state == sm_write_wr_delay) begin
+                packets_number <= packets_number - 1;
+            end else if (current_sm_state == sm_read_oe_delay) begin
+                packets_number <= packets_to_send;
             end
         end
     end
@@ -214,8 +213,6 @@ module main (
             rd_oe_delay_cnt <= 1'b1;
         end else if((current_sm_state == sm_read_rd_and_oe_delay) & (rd_oe_delay_cnt > 1'b0)) begin
             rd_oe_delay_cnt <= rd_oe_delay_cnt - 1'b1;
-        end else begin
-            rd_oe_delay_cnt <= rd_oe_delay_cnt;
         end
     end
 
@@ -247,7 +244,7 @@ module main (
     always @(posedge clk_pll, negedge reset_) begin
         if (!reset_) begin
             wait_ctr_gbl <= 0;
-        end else if (wait_ctr_gbl_reset) begin
+        end else if (all_ctr_reset) begin
             wait_ctr_gbl <= 0;
         end else if (current_sm_state == sm_wait_flagb || current_sm_state == sm_wait_flaga) begin
             wait_ctr_gbl <= wait_ctr_gbl + 1;
@@ -269,7 +266,7 @@ module main (
     always @(posedge clk_pll, negedge reset_) begin
         if (!reset_) begin
             tx_ctr <= 0;
-        end else if (tx_ctr_reset) begin
+        end else if (all_ctr_reset) begin
             tx_ctr <= 0;
         end else if (current_sm_state == sm_write_wr_delay) begin
             tx_ctr <= tx_ctr + 1;
@@ -292,7 +289,7 @@ module main (
             sm_idle: begin
                 if (FLAGC_d == 1'b1) begin
                     next_sm_state = sm_flagc_rcvd;
-                end else if (transfer_ctr > 0) begin
+                end else if (packets_number > 0) begin
                     next_sm_state = sm_wait_flaga;
                 end
             end
@@ -341,6 +338,44 @@ module main (
                 next_sm_state = sm_idle;
             end
         endcase
+    end
+
+    assign read_ready = (SLRD_loopback_d3_ == 1'b0);
+    assign read_data  = (SLRD_loopback_d3_ == 1'b0) ? DQ_d : 32'd0;
+
+    // Read packet index
+    always @(posedge clk_pll, negedge reset_) begin
+        if (!reset_) begin
+            packet_index <= 0;
+        end else if (read_ready) begin
+            packet_index <= packet_index + 1;
+        end else begin
+            packet_index <= 0;
+        end
+    end
+
+    // Check header
+    always @(posedge clk_pll, negedge reset_) begin
+        if (!reset_) begin
+            valid_packet <= 0;
+        end else if (!read_ready) begin
+            valid_packet <= 0;
+        end else if (read_ready && packet_index == 0 && read_data == 32'hCAFEB0BA) begin
+            valid_packet <= 1;
+        end
+    end
+
+    // Parse packet
+    always @(posedge clk_pll, negedge reset_) begin
+        if (!reset_) begin
+            packets_to_send <= 32'h0;
+        end else if (valid_packet) begin
+            case (packet_index)
+                1: begin
+                    packets_to_send <= read_data;
+                end
+            endcase
+        end
     end
 
     // // fifo instantiation for loop back mode

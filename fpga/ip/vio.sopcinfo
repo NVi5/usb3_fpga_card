@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <EnsembleReport name="vio" kind="vio" version="1.0" fabric="QSYS">
  <!-- Format version 21.1 842 (Future versions may contain additional information.) -->
- <!-- 2022.08.14.22:39:09 -->
+ <!-- 2022.08.15.02:22:32 -->
  <!-- A collection of modules and connections -->
  <parameter name="AUTO_GENERATION_ID">
   <type>java.lang.Integer</type>
-  <value>1660509549</value>
+  <value>1660522952</value>
   <derived>false</derived>
   <enabled>true</enabled>
   <visible>false</visible>
@@ -127,7 +127,7 @@ the requested settings for a module instance. -->
   </parameter>
   <parameter name="probe_width">
    <type>int</type>
-   <value>32</value>
+   <value>84</value>
    <derived>false</derived>
    <enabled>true</enabled>
    <visible>true</visible>
@@ -275,7 +275,7 @@ parameters are a RESULT of the module parameters. -->
    <port>
     <name>probe</name>
     <direction>Input</direction>
-    <width>32</width>
+    <width>84</width>
     <role>probe</role>
    </port>
   </interface>

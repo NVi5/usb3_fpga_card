@@ -37,12 +37,12 @@
  */
 #define CY_FX_SLFIFO_GPIF_16_32BIT_CONF_SELECT (1)
 
-#define BURST_LEN 16
+#define BURST_LEN                             (16)
 #define DMA_BUF_SIZE                          (16)
 /* Slave FIFO P_2_U channel buffer count */
 #define CY_FX_SLFIFO_DMA_BUF_COUNT_P_2_U      (8)
 /* Slave FIFO U_2_P channel buffer count */
-#define CY_FX_SLFIFO_DMA_BUF_COUNT_U_2_P      (2)
+#define CY_FX_SLFIFO_DMA_BUF_COUNT_U_2_P      (1)
 
 #define CY_FX_SLFIFO_DMA_TX_SIZE        (0)                       /* DMA transfer size is set to infinite */
 #define CY_FX_SLFIFO_DMA_RX_SIZE        (0)                       /* DMA transfer size is set to infinite */

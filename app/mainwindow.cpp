@@ -6,9 +6,9 @@
 #include "Windows.h"
 
 #define PACKET_SIZE (16*1024)
-#define RX_PACKETS_PER_TRANSFER (4)
+#define RX_PACKETS_PER_TRANSFER (8)
 #define TX_PACKETS_PER_TRANSFER (1)
-#define QUEUE_SIZE (4)
+#define QUEUE_SIZE (1)
 
 #define RX_TRANSFER_SIZE (PACKET_SIZE*RX_PACKETS_PER_TRANSFER)
 #define TX_TRANSFER_SIZE (PACKET_SIZE*TX_PACKETS_PER_TRANSFER)
@@ -472,7 +472,15 @@ void MainWindow::on_start_btn_clicked()
     if (!this->communication_enabled) return;
 
     QList<unsigned char> new_data;
-    for (int i=0; i<256; ++i)
+    new_data.append(0xBA);
+    new_data.append(0xB0);
+    new_data.append(0xFE);
+    new_data.append(0xCA);
+    new_data.append(ui->spinBox->value());
+    new_data.append(ui->spinBox->value() >> 8);
+    new_data.append(ui->spinBox->value() >> 16);
+    new_data.append(ui->spinBox->value() >> 24);
+    for (int i=0; i<248; ++i)
     {
         new_data.append(i);
     }
