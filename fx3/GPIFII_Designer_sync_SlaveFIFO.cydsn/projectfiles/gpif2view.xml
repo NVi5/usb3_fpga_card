@@ -13,8 +13,8 @@
       <ParentID>00000000-0000-0000-0000-000000000000</ParentID>
     </CyNormalState>
     <CyNormalState>
-      <Left>6</Left>
-      <Top>264.446666666667</Top>
+      <Left>44</Left>
+      <Top>149.446666666667</Top>
       <Width>83</Width>
       <Height>70</Height>
       <Name>STATE2</Name>
@@ -24,8 +24,8 @@
       <ParentID>00000000-0000-0000-0000-000000000000</ParentID>
     </CyNormalState>
     <CyNormalState>
-      <Left>518</Left>
-      <Top>345.487206485292</Top>
+      <Left>899</Left>
+      <Top>139.487206485292</Top>
       <Width>83</Width>
       <Height>70</Height>
       <Name>STATE3</Name>
@@ -35,30 +35,8 @@
       <ParentID>00000000-0000-0000-0000-000000000000</ParentID>
     </CyNormalState>
     <CyNormalState>
-      <Left>728</Left>
-      <Top>109.446666666667</Top>
-      <Width>83</Width>
-      <Height>70</Height>
-      <Name>STATE4</Name>
-      <DisplayName>SHORT_PKT</DisplayName>
-      <zIndex>1</zIndex>
-      <IsGroup>False</IsGroup>
-      <ParentID>00000000-0000-0000-0000-000000000000</ParentID>
-    </CyNormalState>
-    <CyNormalState>
-      <Left>13</Left>
-      <Top>91.446666666667</Top>
-      <Width>83</Width>
-      <Height>70</Height>
-      <Name>STATE5</Name>
-      <DisplayName>ZLP</DisplayName>
-      <zIndex>1</zIndex>
-      <IsGroup>False</IsGroup>
-      <ParentID>00000000-0000-0000-0000-000000000000</ParentID>
-    </CyNormalState>
-    <CyNormalState>
-      <Left>271</Left>
-      <Top>343.446666666667</Top>
+      <Left>607</Left>
+      <Top>357.446666666667</Top>
       <Width>83</Width>
       <Height>70</Height>
       <Name>STATE0</Name>
@@ -82,7 +60,7 @@
   <CyTransitions>
     <CyTransition>
       <Name>TRANSITION15</Name>
-      <TransitionEquation>SLWR&amp;!SLCS&amp;PKEND&amp;SLRD</TransitionEquation>
+      <TransitionEquation>SLWR&amp;!SLCS&amp;SLRD</TransitionEquation>
       <SourceName>STATE0</SourceName>
       <SinkName>STATE1</SinkName>
       <SourceConnectorName>Connector</SourceConnectorName>
@@ -92,30 +70,8 @@
       <zIndex>0</zIndex>
     </CyTransition>
     <CyTransition>
-      <Name>TRANSITION14</Name>
-      <TransitionEquation>SLWR&amp;!SLCS&amp;!PKEND&amp;SLRD</TransitionEquation>
-      <SourceName>STATE0</SourceName>
-      <SinkName>STATE5</SinkName>
-      <SourceConnectorName>Connector</SourceConnectorName>
-      <SinkConnectorName>Connector</SinkConnectorName>
-      <SourceArrowSymbol>None</SourceArrowSymbol>
-      <SinkArrowSymbol>Arrow</SinkArrowSymbol>
-      <zIndex>0</zIndex>
-    </CyTransition>
-    <CyTransition>
-      <Name>TRANSITION13</Name>
-      <TransitionEquation>!SLWR&amp;!SLCS&amp;!PKEND&amp;SLRD</TransitionEquation>
-      <SourceName>STATE0</SourceName>
-      <SinkName>STATE4</SinkName>
-      <SourceConnectorName>Connector</SourceConnectorName>
-      <SinkConnectorName>Connector</SinkConnectorName>
-      <SourceArrowSymbol>None</SourceArrowSymbol>
-      <SinkArrowSymbol>Arrow</SinkArrowSymbol>
-      <zIndex>0</zIndex>
-    </CyTransition>
-    <CyTransition>
       <Name>TRANSITION12</Name>
-      <TransitionEquation>!SLWR&amp;!SLCS&amp;PKEND&amp;SLRD</TransitionEquation>
+      <TransitionEquation>!SLWR&amp;!SLCS&amp;SLRD</TransitionEquation>
       <SourceName>STATE0</SourceName>
       <SinkName>STATE3</SinkName>
       <SourceConnectorName>Connector</SourceConnectorName>
@@ -126,7 +82,7 @@
     </CyTransition>
     <CyTransition>
       <Name>TRANSITION11</Name>
-      <TransitionEquation>SLWR&amp;!SLCS&amp;PKEND&amp;!SLRD&amp;!SLOE</TransitionEquation>
+      <TransitionEquation>SLWR&amp;!SLCS&amp;!SLRD&amp;!SLOE</TransitionEquation>
       <SourceName>STATE0</SourceName>
       <SinkName>STATE2</SinkName>
       <SourceConnectorName>Connector</SourceConnectorName>
@@ -137,7 +93,7 @@
     </CyTransition>
     <CyTransition>
       <Name>TRANSITION0</Name>
-      <TransitionEquation>SLWR&amp;!SLCS&amp;PKEND&amp;SLRD</TransitionEquation>
+      <TransitionEquation>SLWR&amp;!SLCS&amp;SLRD</TransitionEquation>
       <SourceName>STATE1</SourceName>
       <SinkName>STATE0</SinkName>
       <SourceConnectorName>Connector</SourceConnectorName>
@@ -159,7 +115,7 @@
     </CyTransition>
     <CyTransition>
       <Name>TRANSITION2</Name>
-      <TransitionEquation>SLWR&amp;!SLCS&amp;PKEND&amp;!SLRD&amp;!SLOE</TransitionEquation>
+      <TransitionEquation>SLWR&amp;!SLCS&amp;!SLRD&amp;!SLOE</TransitionEquation>
       <SourceName>STATE1</SourceName>
       <SinkName>STATE2</SinkName>
       <SourceConnectorName>Connector</SourceConnectorName>
@@ -170,42 +126,9 @@
     </CyTransition>
     <CyTransition>
       <Name>TRANSITION3</Name>
-      <TransitionEquation>!SLWR&amp;!SLCS&amp;PKEND&amp;SLRD</TransitionEquation>
+      <TransitionEquation>!SLWR&amp;!SLCS&amp;SLRD</TransitionEquation>
       <SourceName>STATE1</SourceName>
       <SinkName>STATE3</SinkName>
-      <SourceConnectorName>Connector</SourceConnectorName>
-      <SinkConnectorName>Connector</SinkConnectorName>
-      <SourceArrowSymbol>None</SourceArrowSymbol>
-      <SinkArrowSymbol>Arrow</SinkArrowSymbol>
-      <zIndex>0</zIndex>
-    </CyTransition>
-    <CyTransition>
-      <Name>TRANSITION4</Name>
-      <TransitionEquation>!SLWR&amp;!SLCS&amp;!PKEND&amp;SLRD</TransitionEquation>
-      <SourceName>STATE1</SourceName>
-      <SinkName>STATE4</SinkName>
-      <SourceConnectorName>Connector</SourceConnectorName>
-      <SinkConnectorName>Connector</SinkConnectorName>
-      <SourceArrowSymbol>None</SourceArrowSymbol>
-      <SinkArrowSymbol>Arrow</SinkArrowSymbol>
-      <zIndex>0</zIndex>
-    </CyTransition>
-    <CyTransition>
-      <Name>TRANSITION5</Name>
-      <TransitionEquation>SLWR&amp;!SLCS&amp;!PKEND&amp;SLRD</TransitionEquation>
-      <SourceName>STATE1</SourceName>
-      <SinkName>STATE5</SinkName>
-      <SourceConnectorName>Connector</SourceConnectorName>
-      <SinkConnectorName>Connector</SinkConnectorName>
-      <SourceArrowSymbol>None</SourceArrowSymbol>
-      <SinkArrowSymbol>Arrow</SinkArrowSymbol>
-      <zIndex>0</zIndex>
-    </CyTransition>
-    <CyTransition>
-      <Name>TRANSITION6</Name>
-      <TransitionEquation>PKEND</TransitionEquation>
-      <SourceName>STATE5</SourceName>
-      <SinkName>STATE1</SinkName>
       <SourceConnectorName>Connector</SourceConnectorName>
       <SinkConnectorName>Connector</SinkConnectorName>
       <SourceArrowSymbol>None</SourceArrowSymbol>
@@ -227,28 +150,6 @@
       <Name>TRANSITION8</Name>
       <TransitionEquation>(PKEND&amp;SLWR)|SLCS</TransitionEquation>
       <SourceName>STATE3</SourceName>
-      <SinkName>STATE1</SinkName>
-      <SourceConnectorName>Connector</SourceConnectorName>
-      <SinkConnectorName>Connector</SinkConnectorName>
-      <SourceArrowSymbol>None</SourceArrowSymbol>
-      <SinkArrowSymbol>Arrow</SinkArrowSymbol>
-      <zIndex>0</zIndex>
-    </CyTransition>
-    <CyTransition>
-      <Name>TRANSITION9</Name>
-      <TransitionEquation>!SLWR&amp;!PKEND</TransitionEquation>
-      <SourceName>STATE3</SourceName>
-      <SinkName>STATE4</SinkName>
-      <SourceConnectorName>Connector</SourceConnectorName>
-      <SinkConnectorName>Connector</SinkConnectorName>
-      <SourceArrowSymbol>None</SourceArrowSymbol>
-      <SinkArrowSymbol>Arrow</SinkArrowSymbol>
-      <zIndex>0</zIndex>
-    </CyTransition>
-    <CyTransition>
-      <Name>TRANSITION10</Name>
-      <TransitionEquation>PKEND|SLCS|SLWR</TransitionEquation>
-      <SourceName>STATE4</SourceName>
       <SinkName>STATE1</SinkName>
       <SourceConnectorName>Connector</SourceConnectorName>
       <SinkConnectorName>Connector</SinkConnectorName>
