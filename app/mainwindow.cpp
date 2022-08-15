@@ -221,7 +221,7 @@ bool MainWindow::send_bulk(QList<unsigned char> &tx_buf)
     return status;
 }
 
-bool MainWindow::read_bulk(QList<unsigned char> &rx_buf, unsigned char packets_to_read)
+bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned char> &rx_buf, unsigned char packets_to_read)
 {
     Q_ASSERT(BulkInEpt);
 
@@ -256,70 +256,75 @@ bool MainWindow::read_bulk(QList<unsigned char> &rx_buf, unsigned char packets_t
         }
     }
 
+    qDebug() << "send_bulk result : " << this->send_bulk(tx_buf);
+
     int q_ctr = 0;
 
     if (status)
     {
-        for (int i=0; i < QUEUE_SIZE; i++)
+        for (int j=0; j < 2; j++)
         {
-            LONG r_packet_length = packet_length; // Reset each time because FinishDataXfer may modify it
-
-            if(!BulkInEpt->WaitForXfer(&inOvLap[q_ctr], 1500))
+            for (int i=0; i < QUEUE_SIZE; i++)
             {
-                status = false;
+                LONG r_packet_length = packet_length; // Reset each time because FinishDataXfer may modify it
 
-                BulkInEpt->Abort();
-                if (BulkInEpt->LastError == ERROR_IO_PENDING)
+                if(!BulkInEpt->WaitForXfer(&inOvLap[q_ctr], 1500))
                 {
-                    qDebug() << "WaitForXfer ERROR_IO_PENDING";
-                    WaitForSingleObject(inOvLap[q_ctr].hEvent, 2000);
-                }
-                else
-                {
-                    qDebug() << "WaitForXfer unknown error - " << BulkInEpt->LastError;
-                    ui->lb_status->setText("Error");
-                }
-            }
+                    status = false;
 
-            if (!BulkInEpt->FinishDataXfer(inBuf[q_ctr], r_packet_length, &inOvLap[q_ctr], inContext[q_ctr]))
-            {
-                qDebug() << "FinishDataXfer Error";
-                status = false;
-            }
-
-            if (status)
-            {
-                for (int i=0; i < r_packet_length; i++)
-                {
-#ifdef DEBUG_PATTERN
-                    new_byte = reverse(inBuf[q_ctr][i]);
-                    if ((new_byte - old_byte) != 1 && new_byte != 0 && old_byte != 255)
+                    BulkInEpt->Abort();
+                    if (BulkInEpt->LastError == ERROR_IO_PENDING)
                     {
-                        qDebug() << "Not continuous data new: " << new_byte << "old: " << old_byte;
+                        qDebug() << "WaitForXfer ERROR_IO_PENDING";
+                        WaitForSingleObject(inOvLap[q_ctr].hEvent, 2000);
                     }
-                    old_byte = new_byte;
-#endif /* DEBUG_PATTERN */
-                    rx_buf.append(inBuf[q_ctr][i]);
+                    else
+                    {
+                        qDebug() << "WaitForXfer unknown error - " << BulkInEpt->LastError;
+                        ui->lb_status->setText("Error");
+                    }
                 }
-            }
 
-            inContext[q_ctr] = BulkInEpt->BeginDataXfer(inBuf[q_ctr], packet_length, &inOvLap[q_ctr]);
-            if (BulkInEpt->NtStatus || BulkInEpt->UsbdStatus) // BeginDataXfer failed
-            {
-                qDebug() << "Xfer request rejected. NTSTATUS = " << BulkInEpt->NtStatus;
-                status = FALSE;
-            }
+                if (!BulkInEpt->FinishDataXfer(inBuf[q_ctr], r_packet_length, &inOvLap[q_ctr], inContext[q_ctr]))
+                {
+                    qDebug() << "FinishDataXfer Error";
+                    status = false;
+                }
 
-            q_ctr++;
+                if (status)
+                {
+                    for (int i=0; i < r_packet_length; i++)
+                    {
+#ifdef DEBUG_PATTERN
+                        new_byte = reverse(inBuf[q_ctr][i]);
+                        if ((new_byte - old_byte) != 1 && new_byte != 0 && old_byte != 255)
+                        {
+                            qDebug() << "Not continuous data new: " << new_byte << "old: " << old_byte;
+                        }
+                        old_byte = new_byte;
+#endif /* DEBUG_PATTERN */
+                        rx_buf.append(inBuf[q_ctr][i]);
+                    }
+                }
 
-            if (q_ctr == QUEUE_SIZE)
-            {
-                q_ctr = 0;
+                inContext[q_ctr] = BulkInEpt->BeginDataXfer(inBuf[q_ctr], packet_length, &inOvLap[q_ctr]);
+                if (BulkInEpt->NtStatus || BulkInEpt->UsbdStatus) // BeginDataXfer failed
+                {
+                    qDebug() << "Xfer request rejected. NTSTATUS = " << BulkInEpt->NtStatus;
+                    status = FALSE;
+                }
+
+                q_ctr++;
+
+                if (q_ctr == QUEUE_SIZE)
+                {
+                    q_ctr = 0;
+                }
             }
         }
     }
 
-    qDebug() << "read_bulk Received data: " << rx_buf.size();
+    qDebug() << "send_and_read_bulk Received data: " << rx_buf.size();
 
     BulkInEpt->Abort();
 
@@ -550,8 +555,7 @@ void MainWindow::on_start_btn_clicked()
         new_data.append(0);
     }
 
-    qDebug() << "send_bulk: " << this->send_bulk(new_data);
-    qDebug() << "read_bulk: " << this->read_bulk(this->data_buffer, ui->spinBox->value());
+    qDebug() << "send_and_read_bulk: " << this->send_and_read_bulk(new_data, this->data_buffer, ui->spinBox->value());
 
     this->update_plot(this->data_buffer);
 }
