@@ -24,7 +24,7 @@ module main (
 
     reg  [ 1:0] oe_delay_cnt;
     reg         rd_oe_delay_cnt;
-    wire [31:0] fifo_data_in;
+    // wire [31:0] fifo_data_in;
     reg  [ 7:0] data_gen;
     reg  [31:0] wait_ctr;
     reg         update_ctr_flag;
@@ -48,8 +48,8 @@ module main (
     reg         SLRD_loopback_d2_;
     reg         SLRD_loopback_d3_;
     reg         SLRD_loopback_d4_;
-    reg  [ 1:0] fifo_address;
-    reg  [ 1:0] fifo_address_d;
+    reg  [ 1:0] gpif_address;
+    reg  [ 1:0] gpif_address_d;
     reg         FLAGA_d;
     reg         FLAGB_d;
     reg         FLAGC_d;
@@ -76,7 +76,7 @@ module main (
     // output signal assignment
     assign SLRD  = SLRD_loopback_;
     assign SLWR  = SLWR_loopback_1d_;
-    assign ADDR  = fifo_address_d;
+    assign ADDR  = gpif_address_d;
     assign SLOE  = SLOE_loopback_;
     assign SLCS  = 1'b0;
     assign PKEND = 1'b1;
@@ -166,11 +166,11 @@ module main (
     end
 
     // Control signal of internal fifo for LoopBack mode
-    assign fifo_push    = (SLRD_loopback_d3_ == 1'b0);
-    assign fifo_pop     = (current_sm_state == sm_write);
-    assign fifo_flush   = (current_sm_state == sm_flush_fifo);
+    // assign fifo_push    = (SLRD_loopback_d3_ == 1'b0);
+    // assign fifo_pop     = (current_sm_state == sm_write);
+    // assign fifo_flush   = (current_sm_state == sm_flush_fifo);
 
-    assign fifo_data_in = (SLRD_loopback_d3_ == 1'b0) ? DQ_d : 32'd0;
+    // assign fifo_data_in = (SLRD_loopback_d3_ == 1'b0) ? DQ_d : 32'd0;
 
     // slave fifo address
     always @(*) begin
@@ -179,18 +179,18 @@ module main (
             (current_sm_state == sm_read) |
             (current_sm_state == sm_read_rd_and_oe_delay) |
             (current_sm_state == sm_read_oe_delay)) begin
-            fifo_address = 2'b11;
+            gpif_address = 2'b11;
         end else begin
-            fifo_address = 2'b00;
+            gpif_address = 2'b00;
         end
     end
 
-    // flopping the output fifo address
+    // flopping the output gpif address
     always @(posedge clk_pll, negedge reset_) begin
         if (!reset_) begin
-            fifo_address_d <= 2'd0;
+            gpif_address_d <= 2'd0;
         end else begin
-            fifo_address_d <= fifo_address;
+            gpif_address_d <= gpif_address;
         end
     end
 
