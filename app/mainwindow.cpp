@@ -8,9 +8,9 @@
 #define DEBUG_PATTERN
 
 #define PACKET_SIZE (16*1024)
-#define RX_PACKETS_PER_TRANSFER (3)
+#define RX_PACKETS_PER_TRANSFER (1)
 #define TX_PACKETS_PER_TRANSFER (1)
-#define QUEUE_SIZE (1)
+#define QUEUE_SIZE (8)
 
 #define RX_TRANSFER_SIZE (PACKET_SIZE*RX_PACKETS_PER_TRANSFER)
 #define TX_TRANSFER_SIZE (PACKET_SIZE*TX_PACKETS_PER_TRANSFER)
@@ -226,11 +226,14 @@ bool MainWindow::read_bulk(QList<unsigned char> &rx_buf, unsigned char packets_t
     Q_ASSERT(BulkInEpt);
 
     bool status = true;
-    int q_ctr = 0;
     UCHAR inBuf[QUEUE_SIZE][RX_TRANSFER_SIZE];
     OVERLAPPED inOvLap[QUEUE_SIZE];
     UCHAR *inContext[QUEUE_SIZE];
     LONG packet_length = RX_TRANSFER_SIZE;
+#ifdef DEBUG_PATTERN
+    UCHAR old_byte = 0;
+    UCHAR new_byte = 0;
+#endif /* DEBUG_PATTERN */
 
     rx_buf.clear();
 
@@ -238,7 +241,7 @@ bool MainWindow::read_bulk(QList<unsigned char> &rx_buf, unsigned char packets_t
 
     for (int i=0; i < QUEUE_SIZE; i++)
     {
-        inOvLap[i].hEvent = CreateEvent(NULL, false, false, L"CYUSB_IN");
+        inOvLap[i].hEvent = CreateEvent(NULL, false, false, NULL);
     }
 
     ui->lb_status->setText("Reading data");
@@ -252,6 +255,8 @@ bool MainWindow::read_bulk(QList<unsigned char> &rx_buf, unsigned char packets_t
             status = FALSE;
         }
     }
+
+    int q_ctr = 0;
 
     if (status)
     {
@@ -284,10 +289,6 @@ bool MainWindow::read_bulk(QList<unsigned char> &rx_buf, unsigned char packets_t
 
             if (status)
             {
-#ifdef DEBUG_PATTERN
-                UCHAR old_byte = 0;
-                UCHAR new_byte = 0;
-#endif /* DEBUG_PATTERN */
                 for (int i=0; i < r_packet_length; i++)
                 {
 #ifdef DEBUG_PATTERN
@@ -324,8 +325,8 @@ bool MainWindow::read_bulk(QList<unsigned char> &rx_buf, unsigned char packets_t
 
     for (int i=0; i < QUEUE_SIZE; i++)
     {
-        BulkInEpt->WaitForXfer(&inOvLap[i], 1500);
-        BulkInEpt->FinishDataXfer(inBuf[i], packet_length, &inOvLap[i], inContext[i]);
+       BulkInEpt->WaitForXfer(&inOvLap[i], 1500);
+       BulkInEpt->FinishDataXfer(inBuf[i], packet_length, &inOvLap[i], inContext[i]);
         CloseHandle(inOvLap[i].hEvent);
     }
 
