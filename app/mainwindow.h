@@ -44,6 +44,8 @@ private slots:
 
     void on_gpio3_clicked();
 
+    void on_clr_btn_clicked();
+
 private:
     void init_plot();
     void update_plot(QList<unsigned char> &new_data);

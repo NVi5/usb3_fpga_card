@@ -560,3 +560,16 @@ void MainWindow::on_gpio3_clicked()
 {
     this->handle_button();
 }
+
+void MainWindow::on_clr_btn_clicked()
+{
+    QList<unsigned char> data;
+    data.append(0);
+    data.append(0);
+    data.append(0);
+    data.append(0);
+    data.append(0);
+    data.append(0);
+    this->update_plot(data);
+}
+
