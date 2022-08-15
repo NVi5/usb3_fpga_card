@@ -158,7 +158,7 @@
       <view_node expanded="true" index="54" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="53" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="52" node_type="probe" view_type="group_member"/>
-      <view_node expanded="false" group_name="packets_to_send" index="0" lsb_to_msb="false" node_type="probe" radix="unsigned" view_type="group_header"/>
+      <view_node expanded="false" group_name="write_ctr" index="0" lsb_to_msb="false" node_type="probe" radix="unsigned" view_type="group_header"/>
       <view_node expanded="true" index="51" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="50" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="49" node_type="probe" view_type="group_member"/>
@@ -216,6 +216,6 @@
       <view_node expanded="true" index="0" node_type="probe" view_type="group_member"/>
       <view_node expanded="true" index="0" node_type="source" view_type="independent"/>
     </view>
-    <log data="2021001000000AF210000080040420020000004F520000001080840040000008EB40000002001090080000000D790000004002021001000000AF210000080040420020000004F520000001080840040000008EB40000002000080080000000CAA000008400" max_size="8" size="8" time="8036AF26000000008036AF26000000008036AF26000000008036AF26000000008036AF26000000008036AF26000000008036AF26000000003436AF2600000000" width="101"/>
+    <log data="2021001000000AF210000080040420020000004F520000001080840040000008EB40000002001090080000000D7900000040000010010000008551000009000002000000000000000000000000400000000000000000000003C00000080000E21000008000" max_size="8" size="8" time="8036AF26000000008036AF26000000008036AF26000000008036AF26000000003436AF260000000054B8AF260000000064B8AF260000000035B8AF2600000000" width="101"/>
   </instance>
 </session>

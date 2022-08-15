@@ -40,7 +40,7 @@
 #define BURST_LEN                             (16)
 #define DMA_BUF_SIZE                          (16)
 /* Slave FIFO P_2_U channel buffer count */
-#define CY_FX_SLFIFO_DMA_BUF_COUNT_P_2_U      (8)
+#define CY_FX_SLFIFO_DMA_BUF_COUNT_P_2_U      (4)
 /* Slave FIFO U_2_P channel buffer count */
 #define CY_FX_SLFIFO_DMA_BUF_COUNT_U_2_P      (1)
 
@@ -51,25 +51,11 @@
 
 /* Endpoint and socket definitions for the Slave FIFO application */
 
-/* To change the Producer and Consumer EP enter the appropriate EP numbers for the #defines.
- * In the case of IN endpoints enter EP number along with the direction bit.
- * For eg. EP 6 IN endpoint is 0x86
- *     and EP 6 OUT endpoint is 0x06.
- * To change sockets mention the appropriate socket number in the #defines. */
-
 /* Note: For USB 2.0 the endpoints and corresponding sockets are one-to-one mapped
          i.e. EP 1 is mapped to UIB socket 1 and EP 2 to socket 2 so on */
 
 #define CY_FX_EP_PRODUCER               0x01    /* EP 1 OUT */
 #define CY_FX_EP_CONSUMER               0x81    /* EP 1 IN */
-
-#define CY_FX_PRODUCER_USB_SOCKET    CY_U3P_UIB_SOCKET_PROD_1    /* USB Socket 1 is producer */
-#define CY_FX_CONSUMER_USB_SOCKET    CY_U3P_UIB_SOCKET_CONS_1    /* USB Socket 1 is consumer */
-
-
-/* Used with FX3 Silicon. */
-#define CY_FX_PRODUCER_PPORT_SOCKET    CY_U3P_PIB_SOCKET_0    /* P-port Socket 0 is producer */
-#define CY_FX_CONSUMER_PPORT_SOCKET    CY_U3P_PIB_SOCKET_3    /* P-port Socket 3 is consumer */
 
 /* Extern definitions for the USB Descriptors */
 extern const uint8_t CyFxUSB20DeviceDscr[];

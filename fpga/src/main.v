@@ -24,6 +24,7 @@ module main (
 
     reg  [ 1:0] oe_delay_cnt;
     reg         rd_oe_delay_cnt;
+    reg  [31:0] write_delay_cnt;
     // wire [31:0] fifo_data_in;
     reg  [ 7:0] data_gen;
     reg  [31:0] wait_ctr;
@@ -34,6 +35,7 @@ module main (
     reg  [31:0] packet_index;
     reg         valid_packet;
     reg  [31:0] packets_to_send;
+    reg  [31:0] write_ctr;
     wire        read_ready;
     wire [31:0] read_data;
 
@@ -109,7 +111,7 @@ module main (
     );
 
     vio u1 (
-        .probe({tx_ctr, wait_ctr_gbl, packets_to_send, current_sm_state, ch_src[0], ch_data}),
+        .probe({tx_ctr, wait_ctr_gbl, write_ctr, current_sm_state, ch_src[0], ch_data}),
         .source(all_ctr_reset)
     );
 
@@ -181,7 +183,11 @@ module main (
             (current_sm_state == sm_read_oe_delay)) begin
             gpif_address = 2'b11;
         end else begin
-            gpif_address = 2'b00;
+            if (write_delay_cnt[12]) begin // Every burst change buffer
+                gpif_address = 2'b01;
+            end else begin
+                gpif_address = 2'b00;
+            end
         end
     end
 
@@ -226,8 +232,17 @@ module main (
             oe_delay_cnt <= 2'd2;
         end else if ((current_sm_state == sm_read_oe_delay) & (oe_delay_cnt > 1'b0)) begin
             oe_delay_cnt <= oe_delay_cnt - 1'b1;
-        end else begin
-            oe_delay_cnt <= oe_delay_cnt;
+        end
+    end
+
+    // Counter of transferred packets
+    always @(posedge clk_pll, negedge reset_) begin
+        if (!reset_) begin
+            write_delay_cnt <= 32'd0;
+        end else if (current_sm_state == sm_wait_flaga) begin
+            write_delay_cnt <= packets_to_send << 12; // Multiply by 16384/4
+        end else if ((current_sm_state == sm_write) & (write_delay_cnt > 1'b0)) begin
+            write_delay_cnt <= write_delay_cnt - 1'b1;
         end
     end
 
@@ -275,6 +290,17 @@ module main (
         end
     end
 
+    // Write counter
+    always @(posedge clk_pll, negedge reset_) begin
+        if (!reset_) begin
+            write_ctr <= 0;
+        end else if (all_ctr_reset) begin
+            write_ctr <= 0;
+        end else if (current_sm_state == sm_write) begin
+            write_ctr <= write_ctr + 1;
+        end
+    end
+
     // LoopBack state machine
     always @(posedge clk_pll, negedge reset_) begin
         if (!reset_) begin
@@ -291,8 +317,6 @@ module main (
             sm_idle: begin
                 if (FLAGC_d == 1'b1) begin
                     next_sm_state = sm_flagc_rcvd;
-                end else if (packets_number > 0) begin
-                    next_sm_state = sm_wait_flaga;
                 end
             end
             sm_flagc_rcvd: begin
@@ -329,7 +353,7 @@ module main (
                 end
             end
             sm_write: begin
-                if (FLAGB_d == 1'b0) begin
+                if (write_delay_cnt == 0) begin
                     next_sm_state = sm_write_wr_delay;
                 end
             end

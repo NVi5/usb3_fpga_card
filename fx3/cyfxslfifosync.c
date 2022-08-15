@@ -72,7 +72,7 @@
 
 CyU3PThread slFifoAppThread;	        /* Slave FIFO application thread structure */
 CyU3PDmaChannel glChHandleSlFifoUtoP;   /* DMA Channel handle for U2P transfer. */
-CyU3PDmaChannel glChHandleSlFifoPtoU;   /* DMA Channel handle for P2U transfer. */
+CyU3PDmaMultiChannel glChHandleSlFifoPtoU;   /* DMA Channel handle for P2U transfer. */
 
 uint32_t glDMARxCount = 0;               /* Counter to track the number of buffers received from USB. */
 uint32_t glDMATxCount = 0;               /* Counter to track the number of buffers sent to USB. */
@@ -220,6 +220,7 @@ CyFxSlFifoApplnStart (
     uint16_t size = 0;
     CyU3PEpConfig_t epCfg;
     CyU3PDmaChannelConfig_t dmaCfg;
+    CyU3PDmaMultiChannelConfig_t dmaMultiCfg;
     CyU3PReturnStatus_t apiRetStatus = CY_U3P_SUCCESS;
     CyU3PUSBSpeed_t usbSpeed = CyU3PUsbGetSpeed();
 
@@ -275,49 +276,54 @@ CyFxSlFifoApplnStart (
 
     /* Create a DMA channel for U2P transfer.
      * DMA size is set based on the USB speed. */
-    dmaCfg.size  = DMA_BUF_SIZE * size;
+    dmaCfg.size = DMA_BUF_SIZE * size;
     dmaCfg.count = CY_FX_SLFIFO_DMA_BUF_COUNT_U_2_P;
     dmaCfg.dmaMode = CY_U3P_DMA_MODE_BYTE;
-    /* Enabling the callback for produce event. */
-#ifdef AUTO
-    dmaCfg.notification = 0;
-#else
-    dmaCfg.notification = CY_U3P_DMA_CB_PROD_EVENT;
-#endif
     dmaCfg.prodHeader = 0;
     dmaCfg.prodFooter = 0;
     dmaCfg.consHeader = 0;
     dmaCfg.prodAvailCount = 0;
-
-    dmaCfg.prodSckId = CY_FX_PRODUCER_USB_SOCKET;
-    dmaCfg.consSckId = CY_FX_CONSUMER_PPORT_SOCKET;
+    dmaCfg.prodSckId = CY_U3P_UIB_SOCKET_PROD_1;
+    dmaCfg.consSckId = CY_U3P_PIB_SOCKET_3;
 #ifdef AUTO
+    dmaCfg.notification = 0;
     dmaCfg.cb = NULL;
-    apiRetStatus = CyU3PDmaChannelCreate (&glChHandleSlFifoUtoP, CY_U3P_DMA_TYPE_AUTO, &dmaCfg);
+    apiRetStatus = CyU3PDmaChannelCreate(&glChHandleSlFifoUtoP, CY_U3P_DMA_TYPE_AUTO, &dmaCfg);
 #else
+    dmaCfg.notification = CY_U3P_DMA_CB_PROD_EVENT;
     dmaCfg.cb = CyFxSlFifoUtoPDmaCallback;
-    apiRetStatus = CyU3PDmaChannelCreate (&glChHandleSlFifoUtoP, CY_U3P_DMA_TYPE_MANUAL, &dmaCfg);
+    apiRetStatus = CyU3PDmaChannelCreate(&glChHandleSlFifoUtoP, CY_U3P_DMA_TYPE_MANUAL, &dmaCfg);
 #endif
     if (apiRetStatus != CY_U3P_SUCCESS)
     {
-        CyU3PDebugPrint (4, "CyU3PDmaChannelCreate failed, Error code = %d\n", apiRetStatus);
+        CyU3PDebugPrint(4, "CyU3PDmaChannelCreate failed, Error code = %d\n", apiRetStatus);
         CyFxAppErrorHandler(apiRetStatus);
     }
 
-    /* Create a DMA MANUAL channel for P2U transfer. */
-    dmaCfg.count = CY_FX_SLFIFO_DMA_BUF_COUNT_P_2_U;
-    dmaCfg.prodSckId = CY_FX_PRODUCER_PPORT_SOCKET;
-    dmaCfg.consSckId = CY_FX_CONSUMER_USB_SOCKET;
+    /* Create a Multi DMA channel for P2U transfer. */
+    dmaMultiCfg.size = DMA_BUF_SIZE * size;
+    dmaMultiCfg.count = CY_FX_SLFIFO_DMA_BUF_COUNT_P_2_U;
+    dmaMultiCfg.validSckCount = 2;
+    dmaMultiCfg.prodSckId[0] = CY_U3P_PIB_SOCKET_0;
+    dmaMultiCfg.prodSckId[1] = CY_U3P_PIB_SOCKET_1;
+    dmaMultiCfg.consSckId[0] = CY_U3P_UIB_SOCKET_CONS_1;
+    dmaMultiCfg.prodAvailCount = 0;
+    dmaMultiCfg.prodHeader = 0;
+    dmaMultiCfg.prodFooter = 0;
+    dmaMultiCfg.consHeader = 0;
+    dmaMultiCfg.dmaMode = CY_U3P_DMA_MODE_BYTE;
 #ifdef AUTO
-    dmaCfg.cb = NULL;
-    apiRetStatus = CyU3PDmaChannelCreate (&glChHandleSlFifoPtoU, CY_U3P_DMA_TYPE_AUTO, &dmaCfg);
+    dmaMultiCfg.notification = 0;
+    dmaMultiCfg.cb = NULL;
+    apiRetStatus = CyU3PDmaMultiChannelCreate(&glChHandleSlFifoPtoU, CY_U3P_DMA_TYPE_AUTO_MANY_TO_ONE, &dmaMultiCfg);
 #else
-    dmaCfg.cb = CyFxSlFifoPtoUDmaCallback;
-    apiRetStatus = CyU3PDmaChannelCreate (&glChHandleSlFifoPtoU, CY_U3P_DMA_TYPE_MANUAL, &dmaCfg);
+    dmaMultiCfg.notification = CY_U3P_DMA_CB_PROD_EVENT | CY_U3P_DMA_CB_CONS_EVENT;
+    dmaMultiCfg.cb = NULL; // TODO
+    apiRetStatus = CyU3PDmaMultiChannelCreate(&glChHandleSlFifoPtoU, CY_U3P_DMA_TYPE_MANUAL_MANY_TO_ONE, &dmaMultiCfg);
 #endif
     if (apiRetStatus != CY_U3P_SUCCESS)
     {
-        CyU3PDebugPrint (4, "CyU3PDmaChannelCreate failed, Error code = %d\n", apiRetStatus);
+        CyU3PDebugPrint(4, "CyU3PDmaMultiChannelCreate failed, Error code = %d\n", apiRetStatus);
         CyFxAppErrorHandler(apiRetStatus);
     }
 
@@ -332,7 +338,7 @@ CyFxSlFifoApplnStart (
         CyU3PDebugPrint (4, "CyU3PDmaChannelSetXfer Failed, Error code = %d\n", apiRetStatus);
         CyFxAppErrorHandler(apiRetStatus);
     }
-    apiRetStatus = CyU3PDmaChannelSetXfer (&glChHandleSlFifoPtoU, CY_FX_SLFIFO_DMA_RX_SIZE);
+    apiRetStatus = CyU3PDmaMultiChannelSetXfer (&glChHandleSlFifoPtoU, CY_FX_SLFIFO_DMA_RX_SIZE, 0);
     if (apiRetStatus != CY_U3P_SUCCESS)
     {
         CyU3PDebugPrint (4, "CyU3PDmaChannelSetXfer Failed, Error code = %d\n", apiRetStatus);
