@@ -73,7 +73,6 @@ module main (
     parameter [3:0] sm_wait_flagb = 4'd7;
     parameter [3:0] sm_write = 4'd8;
     parameter [3:0] sm_write_wr_delay = 4'd9;
-    parameter [3:0] sm_flush_fifo = 4'd10;
 
     // output signal assignment
     assign SLRD  = SLRD_loopback_;
@@ -167,14 +166,7 @@ module main (
         end
     end
 
-    // Control signal of internal fifo for LoopBack mode
-    // assign fifo_push    = (SLRD_loopback_d3_ == 1'b0);
-    // assign fifo_pop     = (current_sm_state == sm_write);
-    // assign fifo_flush   = (current_sm_state == sm_flush_fifo);
-
-    // assign fifo_data_in = (SLRD_loopback_d3_ == 1'b0) ? DQ_d : 32'd0;
-
-    // slave fifo address
+    // slave gpif address
     always @(*) begin
         if( (current_sm_state == sm_flagc_rcvd) |
             (current_sm_state == sm_wait_flagd) |
@@ -197,19 +189,6 @@ module main (
             gpif_address_d <= 2'd0;
         end else begin
             gpif_address_d <= gpif_address;
-        end
-    end
-
-    reg [31:0] packets_number;
-    always @(posedge clk_pll, negedge reset_) begin
-        if (!reset_) begin
-            packets_number <= 0;
-        end else begin
-            if (packets_number > 0 && current_sm_state == sm_write_wr_delay) begin
-                packets_number <= packets_number - 1;
-            end else if (current_sm_state == sm_read_oe_delay) begin
-                packets_number <= packets_to_send;
-            end
         end
     end
 
@@ -240,7 +219,7 @@ module main (
         if (!reset_) begin
             write_delay_cnt <= 32'd0;
         end else if (current_sm_state == sm_wait_flaga) begin
-            write_delay_cnt <= packets_to_send << 12; // Multiply by 16384/4
+            write_delay_cnt <= (packets_to_send << 12) - 1; // Multiply by 16384/4
         end else if ((current_sm_state == sm_write) & (write_delay_cnt > 1'b0)) begin
             write_delay_cnt <= write_delay_cnt - 1'b1;
         end
@@ -339,7 +318,11 @@ module main (
             end
             sm_read_oe_delay: begin
                 if (oe_delay_cnt == 0) begin
-                    next_sm_state = sm_wait_flaga;
+                    if (packets_to_send == 0) begin
+                        next_sm_state = sm_idle;
+                    end else begin
+                        next_sm_state = sm_wait_flaga;
+                    end
                 end
             end
             sm_wait_flaga: begin
@@ -358,9 +341,6 @@ module main (
                 end
             end
             sm_write_wr_delay: begin
-                next_sm_state = sm_flush_fifo;
-            end
-            sm_flush_fifo: begin
                 next_sm_state = sm_idle;
             end
         endcase
@@ -403,6 +383,7 @@ module main (
             ch_src[5] <= 8'h8;
             ch_src[6] <= 8'h8;
             ch_src[7] <= 8'h8;
+            USER_LED <= 4'b1111;
         end else if (valid_packet) begin
             case (packet_index)
                 1: begin
@@ -419,6 +400,9 @@ module main (
                     ch_src[5] <= read_data[15:8];
                     ch_src[6] <= read_data[23:16];
                     ch_src[7] <= read_data[31:24];
+                end
+                4: begin
+                    USER_LED <= ~read_data[3:0];
                 end
             endcase
         end

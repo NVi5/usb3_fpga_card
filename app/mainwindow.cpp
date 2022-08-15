@@ -424,6 +424,52 @@ bool MainWindow::get_endpoint_for_device()
     return ui->cb_in_ept->count() > 0 && ui->cb_out_ept->count() > 0;
 }
 
+void MainWindow::populate_header(QList<unsigned char> &buf, unsigned int number_of_packets)
+{
+    buf.append(0xBA);
+    buf.append(0xB0);
+    buf.append(0xFE);
+    buf.append(0xCA);
+
+    buf.append((number_of_packets >>  0) & 0xFF);
+    buf.append((number_of_packets >>  8) & 0xFF);
+    buf.append((number_of_packets >> 16) & 0xFF);
+    buf.append((number_of_packets >> 24) & 0xFF);
+
+    buf.append(ui->ch0->currentIndex());
+    buf.append(ui->ch1->currentIndex());
+    buf.append(ui->ch2->currentIndex());
+    buf.append(ui->ch3->currentIndex());
+
+    buf.append(ui->ch4->currentIndex());
+    buf.append(ui->ch5->currentIndex());
+    buf.append(ui->ch6->currentIndex());
+    buf.append(ui->ch7->currentIndex());
+
+    buf.append( (ui->gpio3->isChecked() << 0) |
+                (ui->gpio2->isChecked() << 1) |
+                (ui->gpio1->isChecked() << 2) |
+                (ui->gpio0->isChecked() << 3));
+    buf.append(0);
+    buf.append(0);
+    buf.append(0);
+}
+
+void MainWindow::handle_button()
+{
+    QList<unsigned char> new_data;
+    this->populate_header(new_data, 0);
+
+    qDebug() << "handle_button header: " << new_data;
+
+    for (int i=0; i<(256 - new_data.size()); ++i)
+    {
+        new_data.append(0);
+    }
+
+    qDebug() << "send_bulk: " << this->send_bulk(new_data);
+}
+
 void MainWindow::on_btn_select_clicked()
 {
     qDebug() << "on_btn_select_clicked";
@@ -472,25 +518,7 @@ void MainWindow::on_start_btn_clicked()
     if (!this->communication_enabled) return;
 
     QList<unsigned char> new_data;
-    new_data.append(0xBA);
-    new_data.append(0xB0);
-    new_data.append(0xFE);
-    new_data.append(0xCA);
-
-    new_data.append((ui->spinBox->value() >>  0) & 0xFF);
-    new_data.append((ui->spinBox->value() >>  8) & 0xFF);
-    new_data.append((ui->spinBox->value() >> 16) & 0xFF);
-    new_data.append((ui->spinBox->value() >> 24) & 0xFF);
-
-    new_data.append(ui->ch0->currentIndex());
-    new_data.append(ui->ch1->currentIndex());
-    new_data.append(ui->ch2->currentIndex());
-    new_data.append(ui->ch3->currentIndex());
-
-    new_data.append(ui->ch4->currentIndex());
-    new_data.append(ui->ch5->currentIndex());
-    new_data.append(ui->ch6->currentIndex());
-    new_data.append(ui->ch7->currentIndex());
+    this->populate_header(new_data, ui->spinBox->value());
 
     qDebug() << "on_start_btn_clicked header: " << new_data;
 
@@ -508,4 +536,27 @@ void MainWindow::on_start_btn_clicked()
 void MainWindow::on_spinBox_valueChanged(int arg1)
 {
     ui->time_label->setText(QString("%1ms").arg(arg1*0.32768));
+}
+
+void MainWindow::on_gpio0_clicked()
+{
+    this->handle_button();
+}
+
+
+void MainWindow::on_gpio1_clicked()
+{
+    this->handle_button();
+}
+
+
+void MainWindow::on_gpio2_clicked()
+{
+    this->handle_button();
+}
+
+
+void MainWindow::on_gpio3_clicked()
+{
+    this->handle_button();
 }

@@ -36,6 +36,14 @@ private slots:
 
     void on_spinBox_valueChanged(int arg1);
 
+    void on_gpio0_clicked();
+
+    void on_gpio1_clicked();
+
+    void on_gpio2_clicked();
+
+    void on_gpio3_clicked();
+
 private:
     void init_plot();
     void update_plot(QList<unsigned char> &new_data);
@@ -45,7 +53,8 @@ private:
     void select_endpoints(void);
     bool get_devices();
     bool get_endpoint_for_device();
-    static DWORD WINAPI thread_read(LPVOID argument);
+    void populate_header(QList<unsigned char> &buf, unsigned int number_of_packets);
+    void handle_button();
 
     bool communication_enabled;
     Ui::MainWindow *ui;
