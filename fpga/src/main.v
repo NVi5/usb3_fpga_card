@@ -25,7 +25,6 @@ module main (
     reg  [ 1:0] oe_delay_cnt;
     reg         rd_oe_delay_cnt;
     reg  [31:0] write_delay_cnt;
-    // wire [31:0] fifo_data_in;
     reg  [ 7:0] data_gen;
     reg  [31:0] wait_ctr;
     reg         update_ctr_flag;
