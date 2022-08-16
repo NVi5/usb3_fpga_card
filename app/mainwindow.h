@@ -34,8 +34,6 @@ private slots:
 
     void yAxisChanged(const QCPRange & newRange);
 
-    void on_spinBox_valueChanged(int arg1);
-
     void on_gpio0_clicked();
 
     void on_gpio1_clicked();
@@ -45,6 +43,8 @@ private slots:
     void on_gpio3_clicked();
 
     void on_clr_btn_clicked();
+
+    void on_packet_slider_valueChanged(int value);
 
 private:
     void init_plot();

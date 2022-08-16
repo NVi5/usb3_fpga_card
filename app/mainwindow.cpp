@@ -5,12 +5,12 @@
 #include <QColor>
 #include "Windows.h"
 
-//#define DEBUG_PATTERN
+#define DEBUG_PATTERN
 
 #define PACKET_SIZE (16*1024)
 #define RX_PACKETS_PER_TRANSFER (8)
 #define TX_PACKETS_PER_TRANSFER (1)
-#define QUEUE_SIZE (8)
+#define QUEUE_SIZE (32)
 
 #define RX_TRANSFER_SIZE (PACKET_SIZE*RX_PACKETS_PER_TRANSFER)
 #define TX_TRANSFER_SIZE (PACKET_SIZE*TX_PACKETS_PER_TRANSFER)
@@ -36,7 +36,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         child->setCurrentIndex(counter++);
     }
 
-    ui->time_label->setText(QString("%1ms").arg(ui->spinBox->value()*0.32768));
+    ui->time_label->setText(QString("%1ms").arg(ui->packet_slider->value()*8*(1/200000*16384)));
+    ui->packet_label->setText(QString("16kB packets: %1").arg(ui->packet_slider->value()*8));
 
     this->init_plot();
 }
@@ -119,8 +120,6 @@ void MainWindow::init_plot()
 
 void MainWindow::update_plot(QList<unsigned char> &new_data)
 {
-    ui->lb_status->setText("Drawing plot");
-
     QVector<double> *x_vect = new QVector<double>;
     QVector<double> *y_vect = new QVector<double>;
     x_vect->reserve(new_data.size());
@@ -231,10 +230,6 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
     PUCHAR *inContext = new PUCHAR[QUEUE_SIZE];
 
     LONG packet_length = RX_TRANSFER_SIZE;
-#ifdef DEBUG_PATTERN
-    UCHAR old_byte = 0;
-    UCHAR new_byte = 0;
-#endif /* DEBUG_PATTERN */
 
     rx_buf.clear();
 
@@ -245,8 +240,6 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
         inBuf[i] = new UCHAR[RX_TRANSFER_SIZE];
         inOvLap[i].hEvent = CreateEvent(NULL, false, false, NULL);
     }
-
-    ui->lb_status->setText("Reading data");
 
     for (int i=0; i < QUEUE_SIZE; i++)
     {
@@ -296,14 +289,6 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
             {
                 for (int i=0; i < r_packet_length; i++)
                 {
-#ifdef DEBUG_PATTERN
-                    new_byte = reverse(inBuf[q_ctr][i]);
-                    if ((new_byte - old_byte) != 1 && new_byte != 0 && old_byte != 255)
-                    {
-                        qDebug() << "Not continuous data new: " << new_byte << "old: " << old_byte;
-                    }
-                    old_byte = new_byte;
-#endif /* DEBUG_PATTERN */
                     rx_buf.append(inBuf[q_ctr][i]);
                 }
             }
@@ -547,12 +532,13 @@ void MainWindow::on_cb_out_ept_currentIndexChanged(int index)
 
 void MainWindow::on_start_btn_clicked()
 {
+    ui->lb_status->setText("Reading data");
     qDebug() << "on_start_btn_clicked";
 
     if (!this->communication_enabled) return;
 
     QList<unsigned char> new_data;
-    this->populate_header(new_data, ui->spinBox->value());
+    this->populate_header(new_data, ui->packet_slider->value()*8);
 
     qDebug() << "on_start_btn_clicked header: " << new_data;
 
@@ -561,14 +547,24 @@ void MainWindow::on_start_btn_clicked()
         new_data.append(0);
     }
 
-    qDebug() << "send_and_read_bulk: " << this->send_and_read_bulk(new_data, this->data_buffer, ui->spinBox->value());
+    qDebug() << "send_and_read_bulk: " << this->send_and_read_bulk(new_data, this->data_buffer, ui->packet_slider->value()*8);
+
+#ifdef DEBUG_PATTERN
+    ui->lb_status->setText("Veryfying data");
+    int old_byte = -1;
+    int new_byte;
+    for (int i = 0; i < this->data_buffer.size(); i++)
+    {
+        new_byte = reverse(this->data_buffer.at(i));
+        if ((new_byte - old_byte) != 1 && new_byte != 0 && old_byte != 255 && old_byte != -1)
+        {
+            qDebug() << "Not continuous data new: " << new_byte << "old: " << old_byte;
+        }
+        old_byte = new_byte;
+    }
+#endif /* DEBUG_PATTERN */
 
     this->update_plot(this->data_buffer);
-}
-
-void MainWindow::on_spinBox_valueChanged(int arg1)
-{
-    ui->time_label->setText(QString("%1ms").arg(arg1*0.32768));
 }
 
 void MainWindow::on_gpio0_clicked()
@@ -604,4 +600,10 @@ void MainWindow::on_clr_btn_clicked()
     data.append(0);
     data.append(0);
     this->update_plot(data);
+}
+
+void MainWindow::on_packet_slider_valueChanged(int value)
+{
+    ui->time_label->setText(QString("%1ms").arg(value*8*0.32768));
+    ui->packet_label->setText(QString("16kB packets: %1").arg(value*8));
 }
