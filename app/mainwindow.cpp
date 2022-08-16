@@ -8,7 +8,7 @@
 //#define DEBUG_PATTERN
 
 #define PACKET_SIZE (16*1024)
-#define RX_PACKETS_PER_TRANSFER (4)
+#define RX_PACKETS_PER_TRANSFER (8)
 #define TX_PACKETS_PER_TRANSFER (1)
 #define QUEUE_SIZE (8)
 
@@ -226,9 +226,10 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
     Q_ASSERT(BulkInEpt);
 
     bool status = true;
-    UCHAR inBuf[QUEUE_SIZE][RX_TRANSFER_SIZE];
     OVERLAPPED inOvLap[QUEUE_SIZE];
-    UCHAR *inContext[QUEUE_SIZE];
+    PUCHAR *inBuf = new PUCHAR[QUEUE_SIZE];
+    PUCHAR *inContext = new PUCHAR[QUEUE_SIZE];
+
     LONG packet_length = RX_TRANSFER_SIZE;
 #ifdef DEBUG_PATTERN
     UCHAR old_byte = 0;
@@ -241,6 +242,7 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
 
     for (int i=0; i < QUEUE_SIZE; i++)
     {
+        inBuf[i] = new UCHAR[RX_TRANSFER_SIZE];
         inOvLap[i].hEvent = CreateEvent(NULL, false, false, NULL);
     }
 
@@ -329,10 +331,15 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
 
     for (int i=0; i < QUEUE_SIZE; i++)
     {
-       BulkInEpt->WaitForXfer(&inOvLap[i], 1500);
-       BulkInEpt->FinishDataXfer(inBuf[i], packet_length, &inOvLap[i], inContext[i]);
+        BulkInEpt->WaitForXfer(&inOvLap[i], 1500);
+        BulkInEpt->FinishDataXfer(inBuf[i], packet_length, &inOvLap[i], inContext[i]);
         CloseHandle(inOvLap[i].hEvent);
+
+        delete [] inBuf[i];
     }
+
+    delete [] inBuf;
+    delete [] inContext;
 
     return status;
 }
