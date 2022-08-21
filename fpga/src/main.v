@@ -438,12 +438,20 @@ module main (
         end
     end
 
-    reg [31:0] data_out_d;
-    // flop data with slower clock
+    reg [31:0] data_out_1d;
+    reg [31:0] data_out_2d;
+    // 2 flip flop synchronizer
     always @(posedge clk_pll) begin
-        data_out_d <= ch_data_d;
+        if(!reset_)begin
+            data_out_1d <= 32'd0;
+            data_out_2d <= 32'd0;
+        end else begin
+            data_out_1d <= ch_data_d;
+            data_out_2d <= data_out_1d;
+        end
+
     end
 
-    assign DQ = (SLWR_loopback_1d_) ? 32'dz : data_out_d;
+    assign DQ = (SLWR_loopback_1d_) ? 32'dz : data_out_2d;
 
 endmodule
