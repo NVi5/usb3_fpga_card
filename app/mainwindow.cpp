@@ -3,9 +3,11 @@
 #include <iostream>
 #include <QDebug>
 #include <QColor>
+#include <QElapsedTimer>
 #include "Windows.h"
 
-#define DEBUG_PATTERN
+// #define DEBUG_PATTERN
+// #define DEBUG_TIME
 
 #define PACKET_SIZE (16*1024)
 #define RX_PACKETS_PER_TRANSFER (8)
@@ -224,10 +226,15 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
 {
     Q_ASSERT(BulkInEpt);
 
+#ifdef DEBUG_TIME
+    QElapsedTimer timer;
+    qint64 elapsed_time;
+#endif /* DEBUG_PATTERN */
+    unsigned char packets_to_read_ctr = packets_to_read;
     bool status = true;
     OVERLAPPED inOvLap[QUEUE_SIZE];
-    PUCHAR *inBuf = new PUCHAR[QUEUE_SIZE];
     PUCHAR *inContext = new PUCHAR[QUEUE_SIZE];
+    PUCHAR *inBuf = new PUCHAR[QUEUE_SIZE];
 
     LONG packet_length = RX_TRANSFER_SIZE;
 
@@ -244,6 +251,9 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
     for (int i=0; i < QUEUE_SIZE; i++)
     {
         inContext[i] = BulkInEpt->BeginDataXfer(inBuf[i], packet_length, &inOvLap[i]);
+#ifdef DEBUG_TIME
+        if (!timer.isValid()) timer.start();
+#endif /* DEBUG_PATTERN */
         if (BulkInEpt->NtStatus || BulkInEpt->UsbdStatus) // BeginDataXfer failed
         {
             qDebug() << "Xfer request rejected. NTSTATUS = " << BulkInEpt->NtStatus;
@@ -257,8 +267,8 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
 
     if (status)
     {
-        packets_to_read /= RX_PACKETS_PER_TRANSFER;
-        while (packets_to_read)
+        packets_to_read_ctr /= RX_PACKETS_PER_TRANSFER;
+        while (packets_to_read_ctr)
         {
             LONG r_packet_length = packet_length; // Reset each time because FinishDataXfer may modify it
 
@@ -287,10 +297,12 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
 
             if (status)
             {
+#ifndef DEBUG_TIME
                 for (int i=0; i < r_packet_length; i++)
                 {
                     rx_buf.append(inBuf[q_ctr][i]);
                 }
+#endif /* DEBUG_PATTERN */
             }
 
             inContext[q_ctr] = BulkInEpt->BeginDataXfer(inBuf[q_ctr], packet_length, &inOvLap[q_ctr]);
@@ -301,7 +313,7 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
             }
 
             q_ctr++;
-            packets_to_read--;
+            packets_to_read_ctr--;
 
             if (q_ctr == QUEUE_SIZE)
             {
@@ -309,6 +321,12 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
             }
         }
     }
+
+#ifdef DEBUG_TIME
+    elapsed_time = timer.elapsed();
+    qDebug() << "Elapsed time: " << elapsed_time << "ms Transferred bytes: " << (qint64)packets_to_read*16*1024*8;
+    qDebug() << "Estimated speed: " << (qint64)packets_to_read*16*8*1000/elapsed_time/1024 << "Mbps";
+#endif /* DEBUG_PATTERN */
 
     qDebug() << "send_and_read_bulk Received data: " << rx_buf.size();
 
