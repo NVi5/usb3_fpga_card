@@ -259,11 +259,11 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
         }
     }
 
+    qDebug() << "send_bulk result : " << this->send_bulk(tx_buf);
+
 #ifdef DEBUG_TIME
     timer.start();
 #endif /* DEBUG_PATTERN */
-
-    qDebug() << "send_bulk result : " << this->send_bulk(tx_buf);
 
     if (status)
     {
