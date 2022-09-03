@@ -6,12 +6,13 @@
 #include <QElapsedTimer>
 #include "Windows.h"
 
-// #define DEBUG_PATTERN
+#define DEBUG_PATTERN
 #define DEBUG_TIME
 
 #define PACKET_SIZE (16*1024)
 #define RX_PACKETS_PER_TRANSFER (8)
 #define TX_PACKETS_PER_TRANSFER (1)
+#define QUEUE_SIZE (16)
 
 #define RX_TRANSFER_SIZE (PACKET_SIZE*RX_PACKETS_PER_TRANSFER)
 #define TX_TRANSFER_SIZE (PACKET_SIZE*TX_PACKETS_PER_TRANSFER)
@@ -38,7 +39,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     }
 
     ui->time_label->setText(QString("%1ms").arg(ui->packet_slider->value()*8*(1/200000*16384)));
-    ui->packet_label->setText(QString("16kB packets: %1").arg(ui->packet_slider->value()*8));
+    ui->packet_label->setText(QString("Transfers(128KB): %1").arg(ui->packet_slider->value()));
 
     this->init_plot();
 }
@@ -220,7 +221,7 @@ bool MainWindow::send_bulk(QList<unsigned char> &tx_buf)
     return status;
 }
 
-bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned char> &rx_buf, unsigned char packets_to_read)
+bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned char> &rx_buf, unsigned int packets_to_read)
 {
     Q_ASSERT(BulkInEpt);
     if (!this->communication_enabled) return FALSE;
@@ -230,28 +231,36 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
     qint64 elapsed_time;
 #endif /* DEBUG_PATTERN */
 
-    unsigned char valid_transfers_ctr = 0;
-    unsigned char queue_size = packets_to_read/RX_PACKETS_PER_TRANSFER;
+    unsigned int valid_transfers_ctr = 0;
+    unsigned int transfer_count = packets_to_read/RX_PACKETS_PER_TRANSFER;
+    unsigned int transfer_ctr = transfer_count;
+    unsigned int buffer_counter = 0;
     bool status = true;
-    OVERLAPPED *inOvLap = new OVERLAPPED[queue_size];
-    // OVERLAPPED inOvLap[255];
-    PUCHAR *inContext = new PUCHAR[queue_size];
-    PUCHAR *inBuf = new PUCHAR[queue_size];
+    OVERLAPPED *inOvLap = new OVERLAPPED[QUEUE_SIZE];
+    PUCHAR *inContext = new PUCHAR[QUEUE_SIZE];
+
+    unsigned char buffer_count = transfer_count > QUEUE_SIZE ? transfer_count : QUEUE_SIZE;
+    PUCHAR *inBuf = new PUCHAR[transfer_count+QUEUE_SIZE];
+    // PUCHAR *inBuf = new PUCHAR[buffer_count];
 
     LONG packet_length = RX_TRANSFER_SIZE;
 
     rx_buf.clear();
 
-
-    for (int i=0; i < queue_size; i++)
+    for (int i=0; (i < transfer_count+QUEUE_SIZE); i++)
     {
         inBuf[i] = new UCHAR[RX_TRANSFER_SIZE];
+    }
+
+    for (int i=0; (i < QUEUE_SIZE); i++)
+    {
         inOvLap[i].hEvent = CreateEvent(NULL, false, false, NULL);
     }
 
-    for (int i=0; i < queue_size; i++)
+    for (int i=0; i < QUEUE_SIZE; i++)
     {
         inContext[i] = BulkInEpt->BeginDataXfer(inBuf[i], packet_length, &inOvLap[i]);
+        buffer_counter++;
         if (BulkInEpt->NtStatus || BulkInEpt->UsbdStatus) // BeginDataXfer failed
         {
             qDebug() << "Xfer request rejected. NTSTATUS =" << BulkInEpt->NtStatus;
@@ -265,9 +274,11 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
     timer.start();
 #endif /* DEBUG_PATTERN */
 
+    unsigned int q_ctr = 0;
+
     if (status)
     {
-        for (int q_ctr=0; q_ctr < queue_size; q_ctr++)
+        while (transfer_ctr)
         {
             LONG r_packet_length = packet_length; // Reset each time because FinishDataXfer may modify it
 
@@ -288,7 +299,8 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
                 }
             }
 
-            if (!BulkInEpt->FinishDataXfer(inBuf[q_ctr], r_packet_length, &inOvLap[q_ctr], inContext[q_ctr]))
+            qDebug() << "Current buffer read" << buffer_counter - QUEUE_SIZE;
+            if (!BulkInEpt->FinishDataXfer(inBuf[buffer_counter - QUEUE_SIZE], r_packet_length, &inOvLap[q_ctr], inContext[q_ctr]))
             {
                 qDebug() << "FinishDataXfer Error";
                 status = false;
@@ -297,6 +309,21 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
             if (status)
             {
                 valid_transfers_ctr++;
+            }
+
+            inContext[q_ctr] = BulkInEpt->BeginDataXfer(inBuf[buffer_counter], packet_length, &inOvLap[q_ctr]);
+            if (BulkInEpt->NtStatus || BulkInEpt->UsbdStatus) // BeginDataXfer failed
+            {
+                qDebug() << "Xfer request rejected. NTSTATUS = " << BulkInEpt->NtStatus;
+                status = FALSE;
+            }
+
+            buffer_counter++;
+            q_ctr++;
+            transfer_ctr--;
+            if (q_ctr == QUEUE_SIZE)
+            {
+                q_ctr = 0;
             }
         }
     }
@@ -320,9 +347,14 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
 
     qDebug() << "send_and_read_bulk Received data:" << rx_buf.size();
 
-    for (int i=0; i < queue_size; i++)
+    for (int i=0; i < QUEUE_SIZE; i++)
     {
+        BulkInEpt->WaitForXfer(&inOvLap[i], 1500);
+        BulkInEpt->FinishDataXfer(inBuf[i], packet_length, &inOvLap[i], inContext[i]);
         CloseHandle(inOvLap[i].hEvent);
+    }
+    for (int i=0; i < transfer_count+QUEUE_SIZE; i++)
+    {
         delete [] inBuf[i];
     }
 
@@ -609,5 +641,5 @@ void MainWindow::on_clr_btn_clicked()
 void MainWindow::on_packet_slider_valueChanged(int value)
 {
     ui->time_label->setText(QString("%1ms").arg(value*8*0.32768));
-    ui->packet_label->setText(QString("16kB packets: %1").arg(value*8));
+    ui->packet_label->setText(QString("Transfers(128KB): %1").arg(value));
 }

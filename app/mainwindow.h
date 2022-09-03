@@ -51,7 +51,7 @@ private:
     void update_plot(QList<unsigned char> &new_data);
     void limitAxisRange(QCPAxis * axis, const QCPRange & newRange, const QCPRange & limitRange);
     bool send_bulk(QList<unsigned char> &tx_buf);
-    bool send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned char> &rx_buf, unsigned char packets_to_read);
+    bool send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned char> &rx_buf, unsigned int packets_to_read);
     void select_endpoints(void);
     bool get_devices();
     bool get_endpoint_for_device();
