@@ -234,8 +234,8 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
     unsigned int transfer_ctr = transfer_count;
     unsigned int buffer_counter = 0;
     bool status = true;
-    OVERLAPPED *inOvLap = new OVERLAPPED[QUEUE_SIZE];
-    PUCHAR *inContext = new PUCHAR[QUEUE_SIZE];
+    OVERLAPPED *inOvLap = new OVERLAPPED[transfer_count];
+    PUCHAR *inContext = new PUCHAR[transfer_count];
 
     PUCHAR *inBuf = new PUCHAR[transfer_count];
 
@@ -260,7 +260,8 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
         }
     }
 
-    qDebug() << "send_bulk result : " << this->send_bulk(tx_buf);
+    qDebug() << "Send request to read data";
+    this->send_bulk(tx_buf);
 
 #ifdef DEBUG_TIME
     timer.start();
@@ -292,7 +293,7 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
                 }
             }
 
-            qDebug() << "Current buffer read" << buffer_counter - read_offset;
+            // qDebug() << "Current buffer read" << buffer_counter - read_offset;
             if (!BulkInEpt->FinishDataXfer(inBuf[buffer_counter - read_offset], r_packet_length, &inOvLap[q_ctr], inContext[q_ctr]))
             {
                 qDebug() << "FinishDataXfer Error";
@@ -334,11 +335,11 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
         }
     }
 
-    qDebug() << "send_and_read_bulk Received data:" << rx_buf.size();
+    qDebug() << "Transferred bytes:" << rx_buf.size();
 
 #ifdef DEBUG_TIME
-    qDebug() << "Elapsed time:" << elapsed_time/1000 << "us Transferred bytes:" << (qint64)transfer_count*16*1024*8*8;
-    qDebug() << "Estimated speed:" << (qint64)transfer_count*16*8*8*1000*1000*1000/elapsed_time/1024 << "Mbps";
+    qDebug() << "Elapsed time:" << elapsed_time/1000;
+    qDebug() << "Estimated speed:" << (qint64)rx_buf.size()*8*1000*1000*1000/elapsed_time/1024/1024 << "Mbps";
 #endif /* DEBUG_TIME */
 
     for (unsigned int i=0; i < QUEUE_SIZE && i < transfer_count; i++)
