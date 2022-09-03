@@ -7,12 +7,11 @@
 #include "Windows.h"
 
 // #define DEBUG_PATTERN
-// #define DEBUG_TIME
+#define DEBUG_TIME
 
 #define PACKET_SIZE (16*1024)
 #define RX_PACKETS_PER_TRANSFER (8)
 #define TX_PACKETS_PER_TRANSFER (1)
-#define QUEUE_SIZE (32)
 
 #define RX_TRANSFER_SIZE (PACKET_SIZE*RX_PACKETS_PER_TRANSFER)
 #define TX_TRANSFER_SIZE (PACKET_SIZE*TX_PACKETS_PER_TRANSFER)
@@ -204,7 +203,6 @@ void MainWindow::limitAxisRange(QCPAxis * axis, const QCPRange & newRange, const
 bool MainWindow::send_bulk(QList<unsigned char> &tx_buf)
 {
     Q_ASSERT(BulkOutEpt);
-
     if (!this->communication_enabled || tx_buf.size() > TX_TRANSFER_SIZE) return FALSE;
 
     LONG packet_length = TX_TRANSFER_SIZE;
@@ -217,7 +215,7 @@ bool MainWindow::send_bulk(QList<unsigned char> &tx_buf)
 
     BOOL status = BulkOutEpt->XferData(outBuf, packet_length);
 
-    qDebug() << "Sent: " << tx_buf << "Result: " << status;
+    qDebug() << "Sent:" << tx_buf << "Result:" << status;
 
     return status;
 }
@@ -225,50 +223,51 @@ bool MainWindow::send_bulk(QList<unsigned char> &tx_buf)
 bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned char> &rx_buf, unsigned char packets_to_read)
 {
     Q_ASSERT(BulkInEpt);
+    if (!this->communication_enabled) return FALSE;
 
 #ifdef DEBUG_TIME
     QElapsedTimer timer;
     qint64 elapsed_time;
 #endif /* DEBUG_PATTERN */
-    unsigned char packets_to_read_ctr = packets_to_read;
+
+    unsigned char valid_transfers_ctr = 0;
+    unsigned char queue_size = packets_to_read/RX_PACKETS_PER_TRANSFER;
     bool status = true;
-    OVERLAPPED inOvLap[QUEUE_SIZE];
-    PUCHAR *inContext = new PUCHAR[QUEUE_SIZE];
-    PUCHAR *inBuf = new PUCHAR[QUEUE_SIZE];
+    OVERLAPPED *inOvLap = new OVERLAPPED[queue_size];
+    // OVERLAPPED inOvLap[255];
+    PUCHAR *inContext = new PUCHAR[queue_size];
+    PUCHAR *inBuf = new PUCHAR[queue_size];
 
     LONG packet_length = RX_TRANSFER_SIZE;
 
     rx_buf.clear();
 
-    if (!this->communication_enabled) return FALSE;
 
-    for (int i=0; i < QUEUE_SIZE; i++)
+    for (int i=0; i < queue_size; i++)
     {
         inBuf[i] = new UCHAR[RX_TRANSFER_SIZE];
         inOvLap[i].hEvent = CreateEvent(NULL, false, false, NULL);
     }
 
-    for (int i=0; i < QUEUE_SIZE; i++)
+    for (int i=0; i < queue_size; i++)
     {
         inContext[i] = BulkInEpt->BeginDataXfer(inBuf[i], packet_length, &inOvLap[i]);
-#ifdef DEBUG_TIME
-        if (!timer.isValid()) timer.start();
-#endif /* DEBUG_PATTERN */
         if (BulkInEpt->NtStatus || BulkInEpt->UsbdStatus) // BeginDataXfer failed
         {
-            qDebug() << "Xfer request rejected. NTSTATUS = " << BulkInEpt->NtStatus;
+            qDebug() << "Xfer request rejected. NTSTATUS =" << BulkInEpt->NtStatus;
             status = FALSE;
         }
     }
 
-    qDebug() << "send_bulk result : " << this->send_bulk(tx_buf);
+#ifdef DEBUG_TIME
+    timer.start();
+#endif /* DEBUG_PATTERN */
 
-    int q_ctr = 0;
+    qDebug() << "send_bulk result : " << this->send_bulk(tx_buf);
 
     if (status)
     {
-        packets_to_read_ctr /= RX_PACKETS_PER_TRANSFER;
-        while (packets_to_read_ctr)
+        for (int q_ctr=0; q_ctr < queue_size; q_ctr++)
         {
             LONG r_packet_length = packet_length; // Reset each time because FinishDataXfer may modify it
 
@@ -284,7 +283,7 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
                 }
                 else
                 {
-                    qDebug() << "WaitForXfer unknown error - " << BulkInEpt->LastError;
+                    qDebug() << "WaitForXfer unknown error -" << BulkInEpt->LastError;
                     ui->lb_status->setText("Error");
                 }
             }
@@ -297,50 +296,37 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
 
             if (status)
             {
-#ifndef DEBUG_TIME
-                for (int i=0; i < r_packet_length; i++)
-                {
-                    rx_buf.append(inBuf[q_ctr][i]);
-                }
-#endif /* DEBUG_PATTERN */
-            }
-
-            inContext[q_ctr] = BulkInEpt->BeginDataXfer(inBuf[q_ctr], packet_length, &inOvLap[q_ctr]);
-            if (BulkInEpt->NtStatus || BulkInEpt->UsbdStatus) // BeginDataXfer failed
-            {
-                qDebug() << "Xfer request rejected. NTSTATUS = " << BulkInEpt->NtStatus;
-                status = FALSE;
-            }
-
-            q_ctr++;
-            packets_to_read_ctr--;
-
-            if (q_ctr == QUEUE_SIZE)
-            {
-                q_ctr = 0;
+                valid_transfers_ctr++;
             }
         }
     }
 
 #ifdef DEBUG_TIME
-    elapsed_time = timer.elapsed();
-    qDebug() << "Elapsed time: " << elapsed_time << "ms Transferred bytes: " << (qint64)packets_to_read*16*1024*8;
-    qDebug() << "Estimated speed: " << (qint64)packets_to_read*16*8*1000/elapsed_time/1024 << "Mbps";
+    elapsed_time = timer.nsecsElapsed();
+    qDebug() << "Elapsed time:" << elapsed_time/1000 << "us Transferred bytes:" << (qint64)packets_to_read*16*1024*8;
+    qDebug() << "Estimated speed:" << (qint64)packets_to_read*16*8*1000*1000*1000/elapsed_time/1024 << "Mbps";
 #endif /* DEBUG_PATTERN */
-
-    qDebug() << "send_and_read_bulk Received data: " << rx_buf.size();
 
     BulkInEpt->Abort();
 
-    for (int i=0; i < QUEUE_SIZE; i++)
+    for (int i=0; i < valid_transfers_ctr; i++)
     {
-        BulkInEpt->WaitForXfer(&inOvLap[i], 1500);
-        BulkInEpt->FinishDataXfer(inBuf[i], packet_length, &inOvLap[i], inContext[i]);
-        CloseHandle(inOvLap[i].hEvent);
+        qDebug() << "Reading buffer:" << i;
+        for (int j=0; j < RX_TRANSFER_SIZE; j++)
+        {
+            rx_buf.append(inBuf[i][j]);
+        }
+    }
 
+    qDebug() << "send_and_read_bulk Received data:" << rx_buf.size();
+
+    for (int i=0; i < queue_size; i++)
+    {
+        CloseHandle(inOvLap[i].hEvent);
         delete [] inBuf[i];
     }
 
+    delete [] inOvLap;
     delete [] inBuf;
     delete [] inContext;
 
@@ -489,14 +475,14 @@ void MainWindow::handle_button()
     QList<unsigned char> new_data;
     this->populate_header(new_data, 0);
 
-    qDebug() << "handle_button header: " << new_data;
+    qDebug() << "handle_button header:" << new_data;
 
     for (int i=0; i<(256 - new_data.size()); ++i)
     {
         new_data.append(0);
     }
 
-    qDebug() << "send_bulk: " << this->send_bulk(new_data);
+    qDebug() << "send_bulk:" << this->send_bulk(new_data);
 }
 
 unsigned char MainWindow::reverse(unsigned char b)
@@ -531,7 +517,7 @@ void MainWindow::on_btn_refresh_clicked()
 
 void MainWindow::on_cb_device_currentIndexChanged(int index)
 {
-    qDebug() << "on_cb_device " << index;
+    qDebug() << "on_cb_device" << index;
 
     this->get_endpoint_for_device();
 }
@@ -539,13 +525,13 @@ void MainWindow::on_cb_device_currentIndexChanged(int index)
 
 void MainWindow::on_cb_in_ept_currentIndexChanged(int index)
 {
-    qDebug() << "on_cb_in_ept " << index;
+    qDebug() << "on_cb_in_ept" << index;
 }
 
 
 void MainWindow::on_cb_out_ept_currentIndexChanged(int index)
 {
-    qDebug() << "on_cb_out_ept " << index;
+    qDebug() << "on_cb_out_ept" << index;
 }
 
 void MainWindow::on_start_btn_clicked()
@@ -558,14 +544,14 @@ void MainWindow::on_start_btn_clicked()
     QList<unsigned char> new_data;
     this->populate_header(new_data, ui->packet_slider->value()*8);
 
-    qDebug() << "on_start_btn_clicked header: " << new_data;
+    qDebug() << "on_start_btn_clicked header:" << new_data;
 
     for (int i=0; i<(256 - new_data.size()); ++i)
     {
         new_data.append(0);
     }
 
-    qDebug() << "send_and_read_bulk: " << this->send_and_read_bulk(new_data, this->data_buffer, ui->packet_slider->value()*8);
+    qDebug() << "send_and_read_bulk:" << this->send_and_read_bulk(new_data, this->data_buffer, ui->packet_slider->value()*8);
 
 #ifdef DEBUG_PATTERN
     ui->lb_status->setText("Veryfying data");
@@ -576,7 +562,7 @@ void MainWindow::on_start_btn_clicked()
         new_byte = reverse(this->data_buffer.at(i));
         if ((new_byte - old_byte) != 1 && new_byte != 0 && old_byte != 255 && old_byte != -1)
         {
-            qDebug() << "Not continuous data new: " << new_byte << "old: " << old_byte;
+            qDebug() << "Not continuous data new:" << new_byte << "old:" << old_byte;
         }
         old_byte = new_byte;
     }
