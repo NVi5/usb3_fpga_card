@@ -339,7 +339,7 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
 
 #ifdef DEBUG_TIME
     qDebug() << "Elapsed time:" << elapsed_time/1000 << "us";
-    qDebug() << "Estimated speed:" << (qint64)rx_buf.size()*8*1000*1000*1000/elapsed_time/1024/1024 << "Mbps";
+    qDebug() << "Estimated speed:" << (qint64)rx_buf.size()*8*1000/elapsed_time << "Mbps";
 #endif /* DEBUG_TIME */
 
     for (unsigned int i=0; i < QUEUE_SIZE && i < transfer_count; i++)
