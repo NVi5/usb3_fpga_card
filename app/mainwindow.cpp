@@ -209,7 +209,7 @@ bool MainWindow::send_bulk(QList<unsigned char> &tx_buf)
     LONG packet_length = TX_TRANSFER_SIZE;
     UCHAR outBuf[TX_TRANSFER_SIZE];
 
-    for (unsigned int i=0; i<tx_buf.size(); i++)
+    for (int i=0; i<tx_buf.size(); i++)
     {
         outBuf[i] = tx_buf.at(i);
     }
@@ -503,7 +503,7 @@ void MainWindow::handle_button()
 
     qDebug() << "handle_button header:" << new_data;
 
-    for (unsigned int i=0; i<(256 - new_data.size()); ++i)
+    for (int i=0; i<(256 - new_data.size()); ++i)
     {
         new_data.append(0);
     }
@@ -572,7 +572,7 @@ void MainWindow::on_start_btn_clicked()
 
     qDebug() << "on_start_btn_clicked header:" << new_data;
 
-    for (unsigned int i=0; i<(256 - new_data.size()); ++i)
+    for (int i=0; i<(256 - new_data.size()); ++i)
     {
         new_data.append(0);
     }
