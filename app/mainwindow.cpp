@@ -8,6 +8,7 @@
 
 #define DEBUG_PATTERN
 #define DEBUG_TIME
+// #define DEBUG_TIME_V2
 
 #define PACKET_SIZE (16*1024)
 #define RX_PACKETS_PER_TRANSFER (8)
@@ -226,7 +227,7 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
     Q_ASSERT(BulkInEpt);
     if (!this->communication_enabled) return FALSE;
 
-#ifdef DEBUG_TIME
+#if defined(DEBUG_TIME) || defined(DEBUG_TIME_V2)
     QElapsedTimer timer;
     qint64 elapsed_time;
 #endif /* DEBUG_TIME */
@@ -260,10 +261,14 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
         }
     }
 
+#if defined(DEBUG_TIME)
+    timer.start();
+#endif /* DEBUG_TIME */
+
     qDebug() << "Send request to read data";
     this->send_bulk(tx_buf);
 
-#ifdef DEBUG_TIME
+#if defined(DEBUG_TIME_V2)
     timer.start();
 #endif /* DEBUG_TIME */
 
@@ -320,7 +325,7 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
         }
     }
 
-#ifdef DEBUG_TIME
+#if defined(DEBUG_TIME) || defined(DEBUG_TIME_V2)
     elapsed_time = timer.nsecsElapsed();
 #endif /* DEBUG_TIME */
 
@@ -337,7 +342,7 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
 
     qDebug() << "Transferred bytes:" << rx_buf.size();
 
-#ifdef DEBUG_TIME
+#if defined(DEBUG_TIME) || defined(DEBUG_TIME_V2)
     qDebug() << "Elapsed time:" << elapsed_time/1000 << "us";
     qDebug() << "Estimated speed:" << (qint64)rx_buf.size()*8*1000/elapsed_time << "Mbps";
 #endif /* DEBUG_TIME */
@@ -580,7 +585,7 @@ void MainWindow::on_start_btn_clicked()
     qDebug() << "send_and_read_bulk:" << this->send_and_read_bulk(new_data, this->data_buffer, ui->packet_slider->value());
 
 #ifdef DEBUG_PATTERN
-    ui->lb_status->setText("Veryfying data");
+    QMessageBox messageBox;
     int old_byte = -1;
     int new_byte;
     for (int i = 0; i < this->data_buffer.size(); i++)
@@ -589,6 +594,9 @@ void MainWindow::on_start_btn_clicked()
         if ((new_byte - old_byte) != 1 && new_byte != 0 && old_byte != 255 && old_byte != -1)
         {
             qDebug() << "Not continuous data new:" << new_byte << "old:" << old_byte;
+            messageBox.critical(0,"Error","Not continuous data");
+            messageBox.setFixedSize(500,200);
+            break;
         }
         old_byte = new_byte;
     }
