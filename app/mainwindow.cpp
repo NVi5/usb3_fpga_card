@@ -235,8 +235,8 @@ bool MainWindow::send_and_read_bulk(QList<unsigned char> &tx_buf, QList<unsigned
     unsigned int transfer_ctr = transfer_count;
     unsigned int buffer_counter = 0;
     bool status = true;
-    OVERLAPPED *inOvLap = new OVERLAPPED[transfer_count];
-    PUCHAR *inContext = new PUCHAR[transfer_count];
+    OVERLAPPED *inOvLap = new OVERLAPPED[QUEUE_SIZE];
+    PUCHAR *inContext = new PUCHAR[QUEUE_SIZE];
 
     PUCHAR *inBuf = new PUCHAR[transfer_count];
 
