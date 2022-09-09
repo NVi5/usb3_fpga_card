@@ -576,12 +576,6 @@ void MainWindow::on_start_btn_clicked()
     this->populate_header(new_data, ui->packet_slider->value()*8);
 
     qDebug() << "on_start_btn_clicked header:" << new_data;
-
-    for (int i=0; i<(256 - new_data.size()); ++i)
-    {
-        new_data.append(0);
-    }
-
     qDebug() << "send_and_read_bulk:" << this->send_and_read_bulk(new_data, this->data_buffer, ui->packet_slider->value());
 
 #ifdef DEBUG_PATTERN
@@ -590,7 +584,7 @@ void MainWindow::on_start_btn_clicked()
     int new_byte;
     for (int i = 0; i < this->data_buffer.size(); i++)
     {
-        new_byte = reverse(this->data_buffer.at(i));
+        new_byte = reverse(this->data_buffer.at(i)); /* Correct endianness */
         if ((new_byte - old_byte) != 1 && new_byte != 0 && old_byte != 255 && old_byte != -1)
         {
             qDebug() << "Not continuous data new:" << new_byte << "old:" << old_byte;
