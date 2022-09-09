@@ -45,10 +45,10 @@ module main (
     wire [31:0] data_out;
     reg  [31:0] DQ_d;
 
-    reg         SLRD_loopback_d1_;
-    reg         SLRD_loopback_d2_;
-    reg         SLRD_loopback_d3_;
-    reg         SLRD_loopback_d4_;
+    reg         SLRD_d1_;
+    reg         SLRD_d2_;
+    reg         SLRD_d3_;
+    reg         SLRD_d4_;
     reg  [ 1:0] gpif_address;
     reg  [ 1:0] gpif_address_d;
     reg         FLAGA_d;
@@ -59,7 +59,7 @@ module main (
 
     reg  [ 3:0] current_sm_state;
     reg  [ 3:0] next_sm_state;
-    reg         SLWR_loopback_1d_;
+    reg         SLWR_1d_;
 
     // parameters for LoopBack mode state machine
     parameter [3:0] sm_idle = 4'd0;
@@ -74,10 +74,10 @@ module main (
     parameter [3:0] sm_write_wr_delay = 4'd9;
 
     // output signal assignment
-    assign SLRD  = SLRD_loopback_;
-    assign SLWR  = SLWR_loopback_1d_;
+    assign SLRD  = SLRD_;
+    assign SLWR  = SLWR_1d_;
     assign ADDR  = gpif_address_d;
-    assign SLOE  = SLOE_loopback_;
+    assign SLOE  = SLOE_;
     assign SLCS  = 1'b0;
     assign PKEND = 1'b1;
 
@@ -129,30 +129,30 @@ module main (
     end
 
     // output control signal generation
-    assign SLRD_loopback_ = ((current_sm_state == sm_read) | (current_sm_state == sm_read_rd_and_oe_delay)) ? 1'b0 : 1'b1;
-    assign SLOE_loopback_ = ((current_sm_state == sm_read) | (current_sm_state == sm_read_rd_and_oe_delay) | (current_sm_state == sm_read_oe_delay)) ? 1'b0 : 1'b1;
-    assign SLWR_loopback_ = ((current_sm_state == sm_write)) ? 1'b0 : 1'b1;
+    assign SLRD_ = ((current_sm_state == sm_read) | (current_sm_state == sm_read_rd_and_oe_delay)) ? 1'b0 : 1'b1;
+    assign SLOE_ = ((current_sm_state == sm_read) | (current_sm_state == sm_read_rd_and_oe_delay) | (current_sm_state == sm_read_oe_delay)) ? 1'b0 : 1'b1;
+    assign SLWR_ = ((current_sm_state == sm_write)) ? 1'b0 : 1'b1;
 
     always @(posedge clk_pll, negedge reset_) begin
         if (!reset_) begin
-            SLWR_loopback_1d_ <= 1'b1;
+            SLWR_1d_ <= 1'b1;
         end else begin
-            SLWR_loopback_1d_ <= SLWR_loopback_;
+            SLWR_1d_ <= SLWR_;
         end
     end
 
     // delay for reading from slave fifo(data will be available after two clk cycle)
     always @(posedge clk_pll, negedge reset_) begin
         if (!reset_) begin
-            SLRD_loopback_d1_ <= 1'b1;
-            SLRD_loopback_d2_ <= 1'b1;
-            SLRD_loopback_d3_ <= 1'b1;
-            SLRD_loopback_d4_ <= 1'b1;
+            SLRD_d1_ <= 1'b1;
+            SLRD_d2_ <= 1'b1;
+            SLRD_d3_ <= 1'b1;
+            SLRD_d4_ <= 1'b1;
         end else begin
-            SLRD_loopback_d1_ <= SLRD_loopback_;
-            SLRD_loopback_d2_ <= SLRD_loopback_d1_;
-            SLRD_loopback_d3_ <= SLRD_loopback_d2_;
-            SLRD_loopback_d4_ <= SLRD_loopback_d3_;
+            SLRD_d1_ <= SLRD_;
+            SLRD_d2_ <= SLRD_d1_;
+            SLRD_d3_ <= SLRD_d2_;
+            SLRD_d4_ <= SLRD_d3_;
         end
     end
 
@@ -345,8 +345,8 @@ module main (
         endcase
     end
 
-    assign read_ready = (SLRD_loopback_d3_ == 1'b0);
-    assign read_data  = (SLRD_loopback_d3_ == 1'b0) ? DQ_d : 32'd0;
+    assign read_ready = (SLRD_d3_ == 1'b0);
+    assign read_data  = (SLRD_d3_ == 1'b0) ? DQ_d : 32'd0;
 
     // Read packet index
     always @(posedge clk_pll, negedge reset_) begin
@@ -452,6 +452,6 @@ module main (
 
     end
 
-    assign DQ = (SLWR_loopback_1d_) ? 32'dz : data_out_2d;
+    assign DQ = (SLWR_1d_) ? 32'dz : data_out_2d;
 
 endmodule
