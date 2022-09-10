@@ -208,7 +208,7 @@ bool MainWindow::send_bulk(QList<unsigned char> &tx_buf)
     if (!this->communication_enabled || tx_buf.size() > TX_TRANSFER_SIZE) return FALSE;
 
     LONG packet_length = TX_TRANSFER_SIZE;
-    UCHAR outBuf[TX_TRANSFER_SIZE];
+    UCHAR outBuf[TX_TRANSFER_SIZE] = {0};
 
     for (int i=0; i<tx_buf.size(); i++)
     {
