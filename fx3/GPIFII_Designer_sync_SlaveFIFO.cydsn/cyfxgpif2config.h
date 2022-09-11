@@ -1,6 +1,6 @@
 /*
  * Project Name: GPIFII_Designer_sync_SlaveFIFO.cyfx
- * Time : 08/15/2022 19:08:28
+ * Time : 09/11/2022 02:48:26
  * Device Type: FX3
  * Project Type: GPIF2
  *
@@ -21,7 +21,7 @@
 /* Summary
    Number of states in the state machine
  */
-#define CY_NUMBER_OF_STATES 5
+#define CY_NUMBER_OF_STATES 4
 
 /* Summary
    Mapping of user defined state names to state indices
@@ -30,20 +30,19 @@
 #define IDLE 1
 #define READ 2
 #define WRITE 3
-#define DSS_STATE 4
 
 
 /* Summary
    Initial value of early outputs from the state machine.
  */
-#define ALPHA_RESET 0xC
+#define ALPHA_RESET 0x8
 
 
 /* Summary
    Transition function values used in the state machine.
  */
 uint16_t CyFxGpifTransition[]  = {
-    0x0000, 0x8080, 0x2222, 0x7F7F, 0x1F1F
+    0x0000, 0x4000, 0x0808, 0x7F7F, 0x7777
 };
 
 /* Summary
@@ -53,22 +52,15 @@ uint16_t CyFxGpifTransition[]  = {
    waveform table. 
  */
 CyU3PGpifWaveData CyFxGpifWavedata[]  = {
-    {{0x1E086001,0x000302C4,0x80000000},{0x00000000,0x00000000,0x00000000}},
-    {{0x3E080302,0x00000300,0x80000000},{0x1E086004,0x000302C4,0x80000000}},
-    {{0x3E080302,0x00000300,0x80000000},{0x1E086001,0x000302C4,0x80000000}},
-    {{0x00000000,0x00000000,0x00000000},{0x00000000,0x00000000,0x00000000}},
-    {{0x00000000,0x00000000,0x00000000},{0x4E002703,0x20000300,0x80000000}}
+    {{0x110C0101,0x000302C4,0x80000000},{0x00000000,0x00000000,0x00000000}},
+    {{0x3E080302,0x00000200,0x80000000},{0x4E700103,0x20000200,0x80000000}}
 };
 
 /* Summary
    Table that maps state indices to the descriptor table indices.
  */
 uint8_t CyFxGpifWavedataPosition[]  = {
-    0,1,0,0,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,
-    3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,
-    3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,
-    3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,
-    0,4,0,0,4
+    0,1,0,0
 };
 
 /* Summary
@@ -77,7 +69,7 @@ uint8_t CyFxGpifWavedataPosition[]  = {
 uint32_t CyFxGpifRegValue[]  = {
     0x80000380,  /*  CY_U3P_PIB_GPIF_CONFIG */
     0x000010AC,  /*  CY_U3P_PIB_GPIF_BUS_CONFIG */
-    0x01000001,  /*  CY_U3P_PIB_GPIF_BUS_CONFIG2 */
+    0x00000000,  /*  CY_U3P_PIB_GPIF_BUS_CONFIG2 */
     0x00000044,  /*  CY_U3P_PIB_GPIF_AD_CONFIG */
     0x00000000,  /*  CY_U3P_PIB_GPIF_STATUS */
     0x00000000,  /*  CY_U3P_PIB_GPIF_INTR */
@@ -145,7 +137,7 @@ uint32_t CyFxGpifRegValue[]  = {
     0x00000000,  /*  CY_U3P_PIB_GPIF_LAMBDA_STAT */
     0x00000000,  /*  CY_U3P_PIB_GPIF_ALPHA_STAT */
     0x00000000,  /*  CY_U3P_PIB_GPIF_BETA_STAT */
-    0x000C0000,  /*  CY_U3P_PIB_GPIF_WAVEFORM_CTRL_STAT */
+    0x00080000,  /*  CY_U3P_PIB_GPIF_WAVEFORM_CTRL_STAT */
     0x00000000,  /*  CY_U3P_PIB_GPIF_WAVEFORM_SWITCH */
     0x00000000,  /*  CY_U3P_PIB_GPIF_WAVEFORM_SWITCH_TIMEOUT */
     0x00000000,  /*  CY_U3P_PIB_GPIF_CRC_CONFIG */
