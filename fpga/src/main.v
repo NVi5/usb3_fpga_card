@@ -407,7 +407,20 @@ module main (
         end
     end
 
-    assign data_src = {PB, 1'b0, data_gen};
+    reg [3:0] PB_1d;
+    reg [3:0] PB_2d;
+    // 2 flip flop synchronizer - input
+    always @(posedge clk_pllx4) begin
+        if(!reset_)begin
+            PB_1d <= 4'd0;
+            PB_2d <= 4'd0;
+        end else begin
+            PB_1d <= PB;
+            PB_2d <= PB_1d;
+        end
+    end
+
+    assign data_src = {PB_2d, 1'b0, data_gen};
     // Invert bits order to match app
     assign ch_data[7] = data_src[ch_src[0]]; // CH0
     assign ch_data[6] = data_src[ch_src[1]]; // CH1
