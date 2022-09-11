@@ -429,7 +429,7 @@ module main (
     end
 
     reg [31:0] ch_data_d;
-    // counter data shifter
+    // channels data shifter
     always @(posedge clk_pllx4, negedge reset_)begin
         if(!reset_)begin
             ch_data_d <= 32'd0;
