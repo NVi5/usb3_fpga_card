@@ -47,14 +47,14 @@
       <GPIOPinNumber>GPIO_21</GPIOPinNumber>
       <IntialValue>Low</IntialValue>
       <Polarity>ActiveLow</Polarity>
-      <Flags>Thread_0_DMA_Ready</Flags>
+      <Flags>Thread_1_DMA_Ready</Flags>
     </Signal>
     <Signal ElementId="FLAG1" SignalType="Flags" SpecialFunction="None">
       <DisplayName>FLAGB</DisplayName>
       <GPIOPinNumber>GPIO_22</GPIOPinNumber>
       <IntialValue>Low</IntialValue>
       <Polarity>ActiveLow</Polarity>
-      <Flags>Thread_0_DMA_WaterMark</Flags>
+      <Flags>Thread_1_DMA_WaterMark</Flags>
     </Signal>
     <Signal ElementId="FLAG2" SignalType="Flags" SpecialFunction="None">
       <DisplayName>FLAGC</DisplayName>
