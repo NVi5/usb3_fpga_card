@@ -408,7 +408,7 @@ module main (
     end
 
     assign data_src = {PB, 1'b0, data_gen};
-    // Invert byte order to match app
+    // Invert bits order to match app
     assign ch_data[7] = data_src[ch_src[0]]; // CH0
     assign ch_data[6] = data_src[ch_src[1]]; // CH1
     assign ch_data[5] = data_src[ch_src[2]]; // CH2
